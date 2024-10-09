@@ -1,0 +1,18 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    queries: "../../internal/mysql/queries/*.sql"
+    schema: "../../internal/mysql/migrations/*.sql"
+    gen:
+      go:
+        package: "generated"
+        out: "../../internal/mysql/generated"
+        emit_json_tags: true
+        emit_interface: true
+        overrides:
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "CHAR(36)"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"
