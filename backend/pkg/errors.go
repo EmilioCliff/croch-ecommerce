@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"fmt"
+	"net/http"
 )
 
 const (
@@ -53,4 +54,23 @@ func ErrorMessage(err error) string {
 // Error implements the error interface. Not used by the application otherwise.
 func (e *Error) Error() string {
 	return fmt.Sprintf("error: code=%s message=%s", e.Code, e.Message)
+}
+
+func PkgErrorToHttpError(err error) int {
+	switch ErrorCode(err) {
+	case ALREADY_EXISTS_ERROR:
+		return http.StatusConflict
+	case INTERNAL_ERROR:
+		return http.StatusInternalServerError
+	case INVALID_ERROR:
+		return http.StatusBadRequest
+	case NOT_FOUND_ERROR:
+		return http.StatusNotFound
+	case NOT_IMPLEMENTED_ERROR:
+		return http.StatusNotImplemented
+	case AUTHENTICATION_ERROR:
+		return http.StatusUnauthorized
+	default:
+		return http.StatusInternalServerError
+	}
 }

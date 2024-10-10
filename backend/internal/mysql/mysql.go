@@ -3,11 +3,14 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
@@ -18,7 +21,7 @@ type Store struct {
 	tokenMaker pkg.Maker
 }
 
-func NewDB(config pkg.Config, maker pkg.Maker) *Store {
+func NewStore(config pkg.Config, maker pkg.Maker) *Store {
 	return &Store{
 		config:     config,
 		tokenMaker: maker,
@@ -42,10 +45,17 @@ func (s *Store) Open() error {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to ping database: %v", err)
 	}
 
-	return s.migration()
+	driver, err := mysql.WithInstance(s.db, &mysql.Config{})
+	if err != nil {
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create driver: %v", err)
+	}
+
+	return s.migration(driver)
 }
 
 func (s *Store) Close() error {
+	log.Println("Shutting down database...")
+
 	if s.db != nil {
 		return s.db.Close()
 	}
@@ -53,15 +63,20 @@ func (s *Store) Close() error {
 	return nil
 }
 
-func (s *Store) migration() error {
+func (s *Store) migration(driver database.Driver) error {
 	if s.config.MIGRATION_PATH == "" {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "migrations directory is empty")
 	}
 
-	migration, err := migrate.New(s.config.MIGRATION_PATH, s.config.DB_DSN)
+	migration, err := migrate.NewWithDatabaseInstance(s.config.MIGRATION_PATH, s.config.DB_DSN, driver)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to load migration: %s", err)
 	}
+
+	// migration, err := migrate.New(s.config.MIGRATION_PATH, s.config.DB_DSN)
+	// if err != nil {
+	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to load migration: %s", err)
+	// }
 
 	if err := migration.Up(); err != nil && err != migrate.ErrNoChange {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to run migrate up: %s", err)
