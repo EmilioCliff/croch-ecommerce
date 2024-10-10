@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	config, err := pkg.LoadConfig("../../.envs/.local/")
+	config, err := pkg.LoadConfig("/app/.envs/.local/")
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
