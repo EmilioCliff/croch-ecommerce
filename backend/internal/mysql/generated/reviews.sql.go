@@ -21,7 +21,7 @@ INSERT INTO reviews (
 type CreateReviewParams struct {
 	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
-	Rating    int32  `json:"rating"`
+	Rating    uint32 `json:"rating"`
 	Review    string `json:"review"`
 }
 
@@ -39,9 +39,28 @@ DELETE FROM reviews
 WHERE id = ?
 `
 
-func (q *Queries) DeleteReview(ctx context.Context, id int32) error {
+func (q *Queries) DeleteReview(ctx context.Context, id uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteReview, id)
 	return err
+}
+
+const getReview = `-- name: GetReview :one
+SELECT id, user_id, product_id, rating, review, created_at FROM reviews
+WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetReview(ctx context.Context, id uint32) (Review, error) {
+	row := q.db.QueryRowContext(ctx, getReview, id)
+	var i Review
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.ProductID,
+		&i.Rating,
+		&i.Review,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const listProductsReviews = `-- name: ListProductsReviews :many

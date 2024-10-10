@@ -12,6 +12,10 @@ ORDER BY created_at DESC;
 SELECT * FROM reviews
 ORDER BY created_at DESC;
 
+-- name: GetReview :one
+SELECT * FROM reviews
+WHERE id = ? LIMIT 1;
+
 -- name: CreateReview :execresult
 INSERT INTO reviews (
   user_id, product_id, rating, review

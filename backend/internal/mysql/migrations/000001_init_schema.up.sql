@@ -16,10 +16,10 @@ CREATE TABLE `products` (
   `description` VARCHAR(255) NOT NULL,
   `regular_price` DECIMAL(10,2) NOT NULL,
   `discounted_price` DECIMAL(10,2) NOT NULL DEFAULT '0',
-  `quantity` INTEGER NOT NULL DEFAULT 0,
-  `category_id` INTEGER,
-  `size_option` JSON,
-  `color_option` JSON,
+  `quantity` INT UNSIGNED NOT NULL DEFAULT 0,
+  `category_id` INT UNSIGNED NOT NULL,
+  `size_option` JSON NOT NULL DEFAULT '[]',
+  `color_option` JSON NOT NULL DEFAULT '[]',
   `rating` float NOT NULL DEFAULT 0 COMMENT 'will be updated anytime a review is added',
   `seasonal` BOOLEAN NOT NULL DEFAULT false,
   `featured` BOOLEAN NOT NULL DEFAULT false,
@@ -31,10 +31,10 @@ CREATE TABLE `products` (
 );
 
 CREATE TABLE `reviews` (
-  `id` INTEGER PRIMARY KEY NOT NULL,
+  `id` INT UNSIGNED PRIMARY KEY NOT NULL,
   `user_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
-  `rating` INTEGER NOT NULL,
+  `rating` INT UNSIGNED NOT NULL,
   `review` TEXT NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -42,14 +42,14 @@ CREATE TABLE `reviews` (
 CREATE TABLE `cart` (
   `user_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
-  `quantity` INTEGER NOT NULL,
+  `quantity` INT UNSIGNED NOT NULL,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'will be used to check how long the cart has stayed'
 );
 
 CREATE TABLE `categories` (
-  `id` INTEGER PRIMARY KEY NOT NULL,
+  `id` INT UNSIGNED PRIMARY KEY NOT NULL,
   `name` VARCHAR(255) NOT NULL,
-  `description` TEXT
+  `description` TEXT NOT NULL DEFAULT 'No description'
 );
 
 CREATE TABLE `orders` (
@@ -57,7 +57,7 @@ CREATE TABLE `orders` (
   `user_id` CHAR(36) NOT NULL,
   `amount` DECIMAL(10,2) NOT NULL COMMENT 'total amount of money for the order',
   `shipping_amount` DECIMAL(10,2) NOT NULL COMMENT 'shipping cost',
-  `status` VARCHAR(255) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING, DELIVERING or DELIVERED',
+  `status` VARCHAR(255) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING, PROCESSING, SHIPPED or DELIVERED',
   `shipping_address` TEXT NOT NULL,
   `updated_by` CHAR(36) NOT NULL DEFAULT null,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -67,18 +67,18 @@ CREATE TABLE `orders` (
 CREATE TABLE `order_items` (
   `order_id` CHAR(36) NOT NULL,
   `product_id` CHAR(36) NOT NULL,
-  `quantity` INTEGER NOT NULL,
+  `quantity` INT UNSIGNED NOT NULL,
   `price` DECIMAL(10,2) NOT NULL,
-  `color` VARCHAR(255),
-  `size` VARCHAR(255)
+  `color` VARCHAR(255) NOT NULL DEFAULT 'No color',
+  `size` VARCHAR(255) NOT NULL DEFAULT 'No size'
 );
 
 CREATE TABLE `blogs` (
-  `id` INTEGER PRIMARY KEY NOT NULL,
+  `id` INT UNSIGNED PRIMARY KEY NOT NULL,
   `author` CHAR(36) NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `content` TEXT NOT NULL,
-  `img_urls` JSON NOT NULL,
+  `img_urls` JSON NOT NULL DEFAULT '[]',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -126,3 +126,12 @@ ALTER TABLE `blogs` ADD FOREIGN KEY (`author`) REFERENCES `users` (`id`);
 
 ALTER TABLE `users` ADD FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`);
 -- FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+
+-- {
+-- 	"overrides": [
+-- 	  {
+-- 		"column": "*.uuid",
+-- 		"go_type": "github.com/google/uuid.UUID"
+-- 	  }
+-- 	]
+--   }

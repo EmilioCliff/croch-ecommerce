@@ -22,7 +22,7 @@ INSERT INTO cart (
 type CreateCartParams struct {
 	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
-	Quantity  int32  `json:"quantity"`
+	Quantity  uint32 `json:"quantity"`
 }
 
 func (q *Queries) CreateCart(ctx context.Context, arg CreateCartParams) (sql.Result, error) {
@@ -181,7 +181,7 @@ WHERE user_id = ? AND product_id = ?
 `
 
 type UpdateUserCartParams struct {
-	Quantity  int32  `json:"quantity"`
+	Quantity  uint32 `json:"quantity"`
 	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
 }

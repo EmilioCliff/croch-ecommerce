@@ -3,6 +3,11 @@ SELECT * FROM products
 WHERE seasonal = TRUE
 ORDER BY name;
 
+-- name: ListNewProducts :many
+SELECT * FROM products
+WHERE created_at > NOW() - INTERVAL 1 WEEK
+ORDER BY name;
+
 -- name: ListFeaturedProducts :many
 SELECT * FROM products
 WHERE featured = TRUE
@@ -39,17 +44,26 @@ WHERE id = ?;
 
 -- name: UpdateProduct :exec
 UPDATE products
-  set name = ?,
-  description = ?,
-  regular_price = ?,
-  discounted_price = ?,
-  quantity = ?,
-  category_id = ?,
-  size_option = ?,
-  color_option = ?,
-  seasonal =  ?,
-  featured =  ?,
-  img_urls =  ?,
-  updated_by = ?,
-  updated_at = ?
-WHERE id = ?;
+  set name = coalesce(sqlc.narg('name'), name),
+  description = coalesce(sqlc.narg('description'), description),
+  regular_price = coalesce(sqlc.narg('regular_price'), regular_price),
+  discounted_price = coalesce(sqlc.narg('discounted_price'), discounted_price),
+  quantity = coalesce(sqlc.narg('quantity'), quantity),
+  category_id = coalesce(sqlc.narg('category_id'), category_id),
+  size_option = coalesce(sqlc.narg('size_option'), size_option),
+  color_option = coalesce(sqlc.narg('color_option'), color_option),
+  seasonal =  coalesce(sqlc.narg('seasonal'), seasonal),
+  featured =  coalesce(sqlc.narg('featured'), featured),
+  img_urls =  coalesce(sqlc.narg('img_urls'), img_urls),
+  updated_by = sqlc.arg('updated_by'),
+  updated_at = CURRENT_TIMESTAMP
+WHERE id = sqlc.arg('id');
+
+-- name: UpdateRating :exec
+UPDATE products
+SET rating = (
+    SELECT AVG(rating) 
+    FROM reviews
+    WHERE reviews.product_id = products.id
+)
+WHERE products.id = ?;

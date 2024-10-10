@@ -9,7 +9,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"time"
 )
 
 const createProduct = `-- name: CreateProduct :execresult
@@ -24,10 +23,10 @@ type CreateProductParams struct {
 	ID              string          `json:"id"`
 	Name            string          `json:"name"`
 	Description     string          `json:"description"`
-	RegularPrice    string          `json:"regular_price"`
-	DiscountedPrice string          `json:"discounted_price"`
-	Quantity        int32           `json:"quantity"`
-	CategoryID      sql.NullInt32   `json:"category_id"`
+	RegularPrice    float64         `json:"regular_price"`
+	DiscountedPrice float64         `json:"discounted_price"`
+	Quantity        uint32          `json:"quantity"`
+	CategoryID      uint32          `json:"category_id"`
 	SizeOption      json.RawMessage `json:"size_option"`
 	ColorOption     json.RawMessage `json:"color_option"`
 	Seasonal        bool            `json:"seasonal"`
@@ -185,6 +184,52 @@ func (q *Queries) ListFeaturedProducts(ctx context.Context) ([]Product, error) {
 	return items, nil
 }
 
+const listNewProducts = `-- name: ListNewProducts :many
+SELECT id, name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, rating, seasonal, featured, img_urls, updated_by, updated_at, created_at FROM products
+WHERE created_at > NOW() - INTERVAL 1 WEEK
+ORDER BY name
+`
+
+func (q *Queries) ListNewProducts(ctx context.Context) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, listNewProducts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Product
+	for rows.Next() {
+		var i Product
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.RegularPrice,
+			&i.DiscountedPrice,
+			&i.Quantity,
+			&i.CategoryID,
+			&i.SizeOption,
+			&i.ColorOption,
+			&i.Rating,
+			&i.Seasonal,
+			&i.Featured,
+			&i.ImgUrls,
+			&i.UpdatedBy,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listProducts = `-- name: ListProducts :many
 SELECT id, name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, rating, seasonal, featured, img_urls, updated_by, updated_at, created_at FROM products
 ORDER BY name
@@ -236,7 +281,7 @@ WHERE category_id = ?
 ORDER BY name
 `
 
-func (q *Queries) ListProductsByCategory(ctx context.Context, categoryID sql.NullInt32) ([]Product, error) {
+func (q *Queries) ListProductsByCategory(ctx context.Context, categoryID uint32) ([]Product, error) {
 	rows, err := q.db.QueryContext(ctx, listProductsByCategory, categoryID)
 	if err != nil {
 		return nil, err
@@ -324,36 +369,35 @@ func (q *Queries) ListSeasonalProducts(ctx context.Context) ([]Product, error) {
 
 const updateProduct = `-- name: UpdateProduct :exec
 UPDATE products
-  set name = ?,
-  description = ?,
-  regular_price = ?,
-  discounted_price = ?,
-  quantity = ?,
-  category_id = ?,
-  size_option = ?,
-  color_option = ?,
-  seasonal =  ?,
-  featured =  ?,
-  img_urls =  ?,
+  set name = coalesce(?, name),
+  description = coalesce(?, description),
+  regular_price = coalesce(?, regular_price),
+  discounted_price = coalesce(?, discounted_price),
+  quantity = coalesce(?, quantity),
+  category_id = coalesce(?, category_id),
+  size_option = coalesce(?, size_option),
+  color_option = coalesce(?, color_option),
+  seasonal =  coalesce(?, seasonal),
+  featured =  coalesce(?, featured),
+  img_urls =  coalesce(?, img_urls),
   updated_by = ?,
-  updated_at = ?
+  updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
 `
 
 type UpdateProductParams struct {
-	Name            string          `json:"name"`
-	Description     string          `json:"description"`
-	RegularPrice    string          `json:"regular_price"`
-	DiscountedPrice string          `json:"discounted_price"`
-	Quantity        int32           `json:"quantity"`
+	Name            sql.NullString  `json:"name"`
+	Description     sql.NullString  `json:"description"`
+	RegularPrice    float64         `json:"regular_price"`
+	DiscountedPrice float64         `json:"discounted_price"`
+	Quantity        sql.NullInt32   `json:"quantity"`
 	CategoryID      sql.NullInt32   `json:"category_id"`
 	SizeOption      json.RawMessage `json:"size_option"`
 	ColorOption     json.RawMessage `json:"color_option"`
-	Seasonal        bool            `json:"seasonal"`
-	Featured        bool            `json:"featured"`
+	Seasonal        sql.NullBool    `json:"seasonal"`
+	Featured        sql.NullBool    `json:"featured"`
 	ImgUrls         json.RawMessage `json:"img_urls"`
 	UpdatedBy       string          `json:"updated_by"`
-	UpdatedAt       time.Time       `json:"updated_at"`
 	ID              string          `json:"id"`
 }
 
@@ -371,8 +415,22 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.Featured,
 		arg.ImgUrls,
 		arg.UpdatedBy,
-		arg.UpdatedAt,
 		arg.ID,
 	)
+	return err
+}
+
+const updateRating = `-- name: UpdateRating :exec
+UPDATE products
+SET rating = (
+    SELECT AVG(rating) 
+    FROM reviews
+    WHERE reviews.product_id = products.id
+)
+WHERE products.id = ?
+`
+
+func (q *Queries) UpdateRating(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, updateRating, id)
 	return err
 }

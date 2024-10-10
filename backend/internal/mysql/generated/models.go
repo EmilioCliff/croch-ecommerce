@@ -5,13 +5,12 @@
 package generated
 
 import (
-	"database/sql"
 	"encoding/json"
 	"time"
 )
 
 type Blog struct {
-	ID        int32           `json:"id"`
+	ID        uint32          `json:"id"`
 	Author    string          `json:"author"`
 	Title     string          `json:"title"`
 	Content   string          `json:"content"`
@@ -22,25 +21,25 @@ type Blog struct {
 type Cart struct {
 	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
-	Quantity  int32  `json:"quantity"`
+	Quantity  uint32 `json:"quantity"`
 	// will be used to check how long the cart has stayed
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type Category struct {
-	ID          int32          `json:"id"`
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
+	ID          uint32 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type Order struct {
 	ID     string `json:"id"`
 	UserID string `json:"user_id"`
 	// total amount of money for the order
-	Amount string `json:"amount"`
+	Amount float64 `json:"amount"`
 	// shipping cost
-	ShippingAmount string `json:"shipping_amount"`
-	// PENDING, DELIVERING or DELIVERED
+	ShippingAmount float64 `json:"shipping_amount"`
+	// PENDING, PROCESSING, SHIPPED or DELIVERED
 	Status          string    `json:"status"`
 	ShippingAddress string    `json:"shipping_address"`
 	UpdatedBy       string    `json:"updated_by"`
@@ -49,22 +48,22 @@ type Order struct {
 }
 
 type OrderItem struct {
-	OrderID   string         `json:"order_id"`
-	ProductID string         `json:"product_id"`
-	Quantity  int32          `json:"quantity"`
-	Price     string         `json:"price"`
-	Color     sql.NullString `json:"color"`
-	Size      sql.NullString `json:"size"`
+	OrderID   string  `json:"order_id"`
+	ProductID string  `json:"product_id"`
+	Quantity  uint32  `json:"quantity"`
+	Price     float64 `json:"price"`
+	Color     string  `json:"color"`
+	Size      string  `json:"size"`
 }
 
 type Product struct {
 	ID              string          `json:"id"`
 	Name            string          `json:"name"`
 	Description     string          `json:"description"`
-	RegularPrice    string          `json:"regular_price"`
-	DiscountedPrice string          `json:"discounted_price"`
-	Quantity        int32           `json:"quantity"`
-	CategoryID      sql.NullInt32   `json:"category_id"`
+	RegularPrice    float64         `json:"regular_price"`
+	DiscountedPrice float64         `json:"discounted_price"`
+	Quantity        uint32          `json:"quantity"`
+	CategoryID      uint32          `json:"category_id"`
 	SizeOption      json.RawMessage `json:"size_option"`
 	ColorOption     json.RawMessage `json:"color_option"`
 	// will be updated anytime a review is added
@@ -78,10 +77,10 @@ type Product struct {
 }
 
 type Review struct {
-	ID        int32     `json:"id"`
+	ID        uint32    `json:"id"`
 	UserID    string    `json:"user_id"`
 	ProductID string    `json:"product_id"`
-	Rating    int32     `json:"rating"`
+	Rating    uint32    `json:"rating"`
 	Review    string    `json:"review"`
 	CreatedAt time.Time `json:"created_at"`
 }

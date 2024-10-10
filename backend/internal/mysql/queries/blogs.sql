@@ -2,7 +2,7 @@
 SELECT * FROM blogs
 WHERE id = ? LIMIT 1;
 
--- name: GetBlogByAuthor :one
+-- name: GetBlogsByAuthor :many
 SELECT * FROM blogs
 WHERE author = ? LIMIT 1;
 
@@ -10,20 +10,21 @@ WHERE author = ? LIMIT 1;
 SELECT * FROM blogs
 ORDER BY created_at DESC;
 
--- name: CreateBlogs :execresult
+-- name: CreateBlog :execresult
 INSERT INTO blogs (
   author, title, content, img_urls
 ) VALUES (
   ?, ?, ?, ?
 );
 
--- name: DeleteAuthor :exec
+-- name: DeleteBlog :exec
 DELETE FROM blogs
 WHERE id = ?;
 
 -- name: UpdateBlog :exec
 UPDATE blogs
-  set title = ?,
-  content = ?,
-  img_urls = ?
-WHERE id = ?;
+  set title = coalesce(sqlc.narg('title'), name),
+  content = coalesce(sqlc.narg('content'), content),
+  img_urls = coalesce(sqlc.narg('img_urls'), img_urls)
+WHERE id = sqlc.arg('id');
+

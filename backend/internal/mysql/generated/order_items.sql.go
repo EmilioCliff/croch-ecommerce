@@ -19,12 +19,12 @@ INSERT INTO order_items (
 `
 
 type CreateOrderItemParams struct {
-	ProductID string         `json:"product_id"`
-	OrderID   string         `json:"order_id"`
-	Quantity  int32          `json:"quantity"`
-	Price     string         `json:"price"`
-	Color     sql.NullString `json:"color"`
-	Size      sql.NullString `json:"size"`
+	ProductID string  `json:"product_id"`
+	OrderID   string  `json:"order_id"`
+	Quantity  uint32  `json:"quantity"`
+	Price     float64 `json:"price"`
+	Color     string  `json:"color"`
+	Size      string  `json:"size"`
 }
 
 func (q *Queries) CreateOrderItem(ctx context.Context, arg CreateOrderItemParams) (sql.Result, error) {

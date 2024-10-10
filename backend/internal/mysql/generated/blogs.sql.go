@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 )
 
-const createBlogs = `-- name: CreateBlogs :execresult
+const createBlog = `-- name: CreateBlog :execresult
 INSERT INTO blogs (
   author, title, content, img_urls
 ) VALUES (
@@ -19,15 +19,15 @@ INSERT INTO blogs (
 )
 `
 
-type CreateBlogsParams struct {
+type CreateBlogParams struct {
 	Author  string          `json:"author"`
 	Title   string          `json:"title"`
 	Content string          `json:"content"`
 	ImgUrls json.RawMessage `json:"img_urls"`
 }
 
-func (q *Queries) CreateBlogs(ctx context.Context, arg CreateBlogsParams) (sql.Result, error) {
-	return q.db.ExecContext(ctx, createBlogs,
+func (q *Queries) CreateBlog(ctx context.Context, arg CreateBlogParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createBlog,
 		arg.Author,
 		arg.Title,
 		arg.Content,
@@ -35,13 +35,13 @@ func (q *Queries) CreateBlogs(ctx context.Context, arg CreateBlogsParams) (sql.R
 	)
 }
 
-const deleteAuthor = `-- name: DeleteAuthor :exec
+const deleteBlog = `-- name: DeleteBlog :exec
 DELETE FROM blogs
 WHERE id = ?
 `
 
-func (q *Queries) DeleteAuthor(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteAuthor, id)
+func (q *Queries) DeleteBlog(ctx context.Context, id uint32) error {
+	_, err := q.db.ExecContext(ctx, deleteBlog, id)
 	return err
 }
 
@@ -50,7 +50,7 @@ SELECT id, author, title, content, img_urls, created_at FROM blogs
 WHERE id = ? LIMIT 1
 `
 
-func (q *Queries) GetBlog(ctx context.Context, id int32) (Blog, error) {
+func (q *Queries) GetBlog(ctx context.Context, id uint32) (Blog, error) {
 	row := q.db.QueryRowContext(ctx, getBlog, id)
 	var i Blog
 	err := row.Scan(
@@ -64,23 +64,39 @@ func (q *Queries) GetBlog(ctx context.Context, id int32) (Blog, error) {
 	return i, err
 }
 
-const getBlogByAuthor = `-- name: GetBlogByAuthor :one
+const getBlogsByAuthor = `-- name: GetBlogsByAuthor :many
 SELECT id, author, title, content, img_urls, created_at FROM blogs
 WHERE author = ? LIMIT 1
 `
 
-func (q *Queries) GetBlogByAuthor(ctx context.Context, author string) (Blog, error) {
-	row := q.db.QueryRowContext(ctx, getBlogByAuthor, author)
-	var i Blog
-	err := row.Scan(
-		&i.ID,
-		&i.Author,
-		&i.Title,
-		&i.Content,
-		&i.ImgUrls,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) GetBlogsByAuthor(ctx context.Context, author string) ([]Blog, error) {
+	rows, err := q.db.QueryContext(ctx, getBlogsByAuthor, author)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Blog
+	for rows.Next() {
+		var i Blog
+		if err := rows.Scan(
+			&i.ID,
+			&i.Author,
+			&i.Title,
+			&i.Content,
+			&i.ImgUrls,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listBlogs = `-- name: ListBlogs :many
@@ -120,17 +136,17 @@ func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
 
 const updateBlog = `-- name: UpdateBlog :exec
 UPDATE blogs
-  set title = ?,
-  content = ?,
-  img_urls = ?
+  set title = coalesce(?, name),
+  content = coalesce(?, content),
+  img_urls = coalesce(?, img_urls)
 WHERE id = ?
 `
 
 type UpdateBlogParams struct {
-	Title   string          `json:"title"`
-	Content string          `json:"content"`
+	Title   sql.NullString  `json:"title"`
+	Content sql.NullString  `json:"content"`
 	ImgUrls json.RawMessage `json:"img_urls"`
-	ID      int32           `json:"id"`
+	ID      uint32          `json:"id"`
 }
 
 func (q *Queries) UpdateBlog(ctx context.Context, arg UpdateBlogParams) error {

@@ -11,7 +11,7 @@ import (
 )
 
 type Querier interface {
-	CreateBlogs(ctx context.Context, arg CreateBlogsParams) (sql.Result, error)
+	CreateBlog(ctx context.Context, arg CreateBlogParams) (sql.Result, error)
 	CreateCart(ctx context.Context, arg CreateCartParams) (sql.Result, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (sql.Result, error)
 	CreateOrder(ctx context.Context, arg CreateOrderParams) (sql.Result, error)
@@ -19,21 +19,22 @@ type Querier interface {
 	CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error)
 	CreateReview(ctx context.Context, arg CreateReviewParams) (sql.Result, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
-	DeleteAuthor(ctx context.Context, id int32) error
-	DeleteCategory(ctx context.Context, id int32) error
+	DeleteBlog(ctx context.Context, id uint32) error
+	DeleteCategory(ctx context.Context, id uint32) error
 	DeleteOrder(ctx context.Context, id string) error
 	DeleteOrderOrderItems(ctx context.Context, orderID string) error
 	DeleteProduct(ctx context.Context, id string) error
-	DeleteReview(ctx context.Context, id int32) error
+	DeleteReview(ctx context.Context, id uint32) error
 	DeleteUser(ctx context.Context, id string) error
 	DeleteUserCart(ctx context.Context, userID string) error
-	GetBlog(ctx context.Context, id int32) (Blog, error)
-	GetBlogByAuthor(ctx context.Context, author string) (Blog, error)
-	GetCategory(ctx context.Context, id int32) (Category, error)
+	GetBlog(ctx context.Context, id uint32) (Blog, error)
+	GetBlogsByAuthor(ctx context.Context, author string) ([]Blog, error)
+	GetCategory(ctx context.Context, id uint32) (Category, error)
 	GetOrder(ctx context.Context, id string) (Order, error)
 	GetOrderOrderItems(ctx context.Context, orderID string) ([]OrderItem, error)
 	GetProduct(ctx context.Context, id string) (Product, error)
 	GetProductOrderItems(ctx context.Context, productID string) ([]OrderItem, error)
+	GetReview(ctx context.Context, id uint32) (Review, error)
 	GetSubscribedUsers(ctx context.Context) ([]User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id string) (User, error)
@@ -42,13 +43,14 @@ type Querier interface {
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListDiscountedProducts(ctx context.Context) ([]Product, error)
 	ListFeaturedProducts(ctx context.Context) ([]Product, error)
+	ListNewProducts(ctx context.Context) ([]Product, error)
 	ListOldCarts(ctx context.Context, createdAt time.Time) ([]Cart, error)
 	ListOrderItems(ctx context.Context) ([]OrderItem, error)
 	ListOrderWithStatus(ctx context.Context, status string) ([]Order, error)
 	ListOrders(ctx context.Context) ([]Order, error)
 	ListProductInCarts(ctx context.Context, productID string) ([]Cart, error)
 	ListProducts(ctx context.Context) ([]Product, error)
-	ListProductsByCategory(ctx context.Context, categoryID sql.NullInt32) ([]Product, error)
+	ListProductsByCategory(ctx context.Context, categoryID uint32) ([]Product, error)
 	ListProductsReviews(ctx context.Context, productID string) ([]Review, error)
 	ListReviews(ctx context.Context) ([]Review, error)
 	ListSeasonalProducts(ctx context.Context) ([]Product, error)
@@ -60,6 +62,7 @@ type Querier interface {
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) error
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
+	UpdateRating(ctx context.Context, id string) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
 	UpdateUserCart(ctx context.Context, arg UpdateUserCartParams) error

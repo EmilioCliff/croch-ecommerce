@@ -19,8 +19,8 @@ INSERT INTO categories (
 `
 
 type CreateCategoryParams struct {
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (sql.Result, error) {
@@ -32,7 +32,7 @@ DELETE FROM categories
 WHERE id = ?
 `
 
-func (q *Queries) DeleteCategory(ctx context.Context, id int32) error {
+func (q *Queries) DeleteCategory(ctx context.Context, id uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteCategory, id)
 	return err
 }
@@ -42,7 +42,7 @@ SELECT id, name, description FROM categories
 WHERE id = ? LIMIT 1
 `
 
-func (q *Queries) GetCategory(ctx context.Context, id int32) (Category, error) {
+func (q *Queries) GetCategory(ctx context.Context, id uint32) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategory, id)
 	var i Category
 	err := row.Scan(&i.ID, &i.Name, &i.Description)
@@ -85,9 +85,9 @@ WHERE id = ?
 `
 
 type UpdateCategoryParams struct {
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
-	ID          int32          `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ID          uint32 `json:"id"`
 }
 
 func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) error {

@@ -20,11 +20,11 @@ INSERT INTO orders (
 `
 
 type CreateOrderParams struct {
-	ID              string `json:"id"`
-	UserID          string `json:"user_id"`
-	Amount          string `json:"amount"`
-	ShippingAddress string `json:"shipping_address"`
-	ShippingAmount  string `json:"shipping_amount"`
+	ID              string  `json:"id"`
+	UserID          string  `json:"user_id"`
+	Amount          float64 `json:"amount"`
+	ShippingAddress string  `json:"shipping_address"`
+	ShippingAmount  float64 `json:"shipping_amount"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (sql.Result, error) {
