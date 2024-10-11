@@ -19,8 +19,8 @@ INSERT INTO order_items (
 `
 
 type CreateOrderItemParams struct {
-	ProductID string  `json:"product_id"`
-	OrderID   string  `json:"order_id"`
+	ProductID uint32  `json:"product_id"`
+	OrderID   uint32  `json:"order_id"`
 	Quantity  uint32  `json:"quantity"`
 	Price     float64 `json:"price"`
 	Color     string  `json:"color"`
@@ -43,7 +43,7 @@ DELETE FROM order_items
 WHERE order_id = ?
 `
 
-func (q *Queries) DeleteOrderOrderItems(ctx context.Context, orderID string) error {
+func (q *Queries) DeleteOrderOrderItems(ctx context.Context, orderID uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteOrderOrderItems, orderID)
 	return err
 }
@@ -53,7 +53,7 @@ SELECT order_id, product_id, quantity, price, color, size FROM order_items
 WHERE order_id = ?
 `
 
-func (q *Queries) GetOrderOrderItems(ctx context.Context, orderID string) ([]OrderItem, error) {
+func (q *Queries) GetOrderOrderItems(ctx context.Context, orderID uint32) ([]OrderItem, error) {
 	rows, err := q.db.QueryContext(ctx, getOrderOrderItems, orderID)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ SELECT order_id, product_id, quantity, price, color, size FROM order_items
 WHERE product_id = ?
 `
 
-func (q *Queries) GetProductOrderItems(ctx context.Context, productID string) ([]OrderItem, error) {
+func (q *Queries) GetProductOrderItems(ctx context.Context, productID uint32) ([]OrderItem, error) {
 	rows, err := q.db.QueryContext(ctx, getProductOrderItems, productID)
 	if err != nil {
 		return nil, err

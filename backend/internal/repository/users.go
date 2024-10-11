@@ -5,17 +5,16 @@ import (
 	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Email        string    `json:"email"`
-	Password     string    `json:"password"`
-	Subscription bool      `json:"subscription"`
-	Role         string    `json:"role"`
-	RefreshToken string    `json:"refresh_token"`
-	UpdatedBy    uuid.UUID `json:"updated_by"`
+	ID           uint32 `json:"id"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	Subscription bool   `json:"subscription"`
+	Role         string `json:"role"`
+	RefreshToken string `json:"refresh_token"`
+	UpdatedBy    uint32 `json:"updated_by"`
 
 	// Timestamps
 	UpdatedAt time.Time `json:"updated_at"`
@@ -23,10 +22,6 @@ type User struct {
 }
 
 func (u *User) Validate() error {
-	if u.ID == uuid.Nil {
-		return pkg.Errorf(pkg.INVALID_ERROR, "full_name is required")
-	}
-
 	if u.Email == "" {
 		return pkg.Errorf(pkg.INVALID_ERROR, "email is required")
 	}
@@ -48,12 +43,12 @@ func (u *User) Validate() error {
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *User) (*User, error)
-	GetUserById(ctx context.Context, id uuid.UUID) (*User, error)
+	GetUserById(ctx context.Context, id uint32) (*User, error)
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	GetSubscribedUsers(ctx context.Context) ([]*User, error)
 	ListUsers(ctx context.Context) ([]*User, error)
-	UpdateUserCredentials(ctx context.Context, id uuid.UUID, password string) error
-	UpdateUserSubscriptionStatus(ctx context.Context, id uuid.UUID, status bool) error
-	UpdateRefreshToken(ctx context.Context, id uuid.UUID) (string, error)
-	DeleteUser(ctx context.Context, id uuid.UUID) error
+	UpdateUserCredentials(ctx context.Context, id uint32, password string) error
+	UpdateUserSubscriptionStatus(ctx context.Context, id uint32, status bool) error
+	UpdateRefreshToken(ctx context.Context, id uint32) (string, error)
+	DeleteUser(ctx context.Context, id uint32) error
 }

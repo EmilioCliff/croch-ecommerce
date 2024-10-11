@@ -3,12 +3,11 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
+	"github.com/go-sql-driver/mysql"
 )
 
 var _ repository.UserRepository = (*UserRepository)(nil)
@@ -28,11 +27,6 @@ func NewUserRepository(db *Store) *UserRepository {
 }
 
 func (u *UserRepository) CreateUser(ctx context.Context, user *repository.User) (*repository.User, error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate uuid: %v", err)
-	}
-
 	accessToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, u.db.config.TOKEN_DURATION)
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create token: %v", err)
@@ -43,7 +37,6 @@ func (u *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create token: %v", err)
 	}
 
-	user.ID = id
 	user.RefreshToken = refreshToken
 
 	if err := user.Validate(); err != nil {
@@ -55,8 +48,7 @@ func (u *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to hash password: %v", err)
 	}
 
-	_, err = u.queries.CreateUser(ctx, generated.CreateUserParams{
-		ID:           user.ID.String(),
+	result, err := u.queries.CreateUser(ctx, generated.CreateUserParams{
 		Email:        user.Email,
 		Password:     hashPass,
 		Subscription: user.Subscription,
@@ -64,8 +56,21 @@ func (u *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 		RefreshToken: user.RefreshToken,
 	})
 	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			if mysqlErr.Number == 1062 {
+				return nil, pkg.Errorf(pkg.ALREADY_EXISTS_ERROR, "duplicate entry for email: %s", user.Email)
+			}
+		}
+
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create user: %v", err)
 	}
+
+	createdId, err := result.LastInsertId()
+	if err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last inserted id: %v", err)
+	}
+
+	user.ID = uint32(createdId)
 
 	// change user refresh token to access_token
 	user.RefreshToken = accessToken
@@ -73,27 +78,24 @@ func (u *UserRepository) CreateUser(ctx context.Context, user *repository.User) 
 	return user, nil
 }
 
-func (u *UserRepository) GetUserById(ctx context.Context, id uuid.UUID) (*repository.User, error) {
-	user, err := u.queries.GetUserById(ctx, id.String())
+func (u *UserRepository) GetUserById(ctx context.Context, id uint32) (*repository.User, error) {
+	user, err := u.queries.GetUserById(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found with id %s", id.String())
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found with id %d", id)
 		}
 
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %v", err)
 	}
 
-	userID, _ := uuid.Parse(user.ID)
-	updatedBy, _ := uuid.Parse(user.UpdatedBy)
-
 	return &repository.User{
-		ID:           userID,
+		ID:           user.ID,
 		Email:        user.Email,
 		Password:     user.Password,
 		Subscription: user.Subscription,
 		Role:         user.Role,
 		RefreshToken: user.RefreshToken,
-		UpdatedBy:    updatedBy,
+		UpdatedBy:    uint32(user.UpdatedBy.Int32),
 		UpdatedAt:    user.UpdatedAt,
 		CreatedAt:    user.CreatedAt,
 	}, nil
@@ -109,17 +111,14 @@ func (u *UserRepository) GetUserByEmail(ctx context.Context, email string) (*rep
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %v", err)
 	}
 
-	userID, _ := uuid.Parse(user.ID)
-	updatedBy, _ := uuid.Parse(user.UpdatedBy)
-
 	return &repository.User{
-		ID:           userID,
+		ID:           user.ID,
 		Email:        user.Email,
 		Password:     user.Password,
 		Subscription: user.Subscription,
 		Role:         user.Role,
 		RefreshToken: user.RefreshToken,
-		UpdatedBy:    updatedBy,
+		UpdatedBy:    uint32(user.UpdatedBy.Int32),
 		UpdatedAt:    user.UpdatedAt,
 		CreatedAt:    user.CreatedAt,
 	}, nil
@@ -134,17 +133,14 @@ func (u *UserRepository) GetSubscribedUsers(ctx context.Context) ([]*repository.
 	var result []*repository.User
 
 	for _, user := range users {
-		userID, _ := uuid.Parse(user.ID)
-		updatedBy, _ := uuid.Parse(user.UpdatedBy)
-
 		result = append(result, &repository.User{
-			ID:           userID,
+			ID:           user.ID,
 			Email:        user.Email,
 			Password:     user.Password,
 			Subscription: user.Subscription,
 			Role:         user.Role,
 			RefreshToken: user.RefreshToken,
-			UpdatedBy:    updatedBy,
+			UpdatedBy:    uint32(user.UpdatedBy.Int32),
 			UpdatedAt:    user.UpdatedAt,
 			CreatedAt:    user.CreatedAt,
 		})
@@ -162,17 +158,14 @@ func (u *UserRepository) ListUsers(ctx context.Context) ([]*repository.User, err
 	var result []*repository.User
 
 	for _, user := range users {
-		userID, _ := uuid.Parse(user.ID)
-		updatedBy, _ := uuid.Parse(user.UpdatedBy)
-
 		result = append(result, &repository.User{
-			ID:           userID,
+			ID:           user.ID,
 			Email:        user.Email,
 			Password:     user.Password,
 			Subscription: user.Subscription,
 			Role:         user.Role,
 			RefreshToken: user.RefreshToken,
-			UpdatedBy:    updatedBy,
+			UpdatedBy:    uint32(user.UpdatedBy.Int32),
 			UpdatedAt:    user.UpdatedAt,
 			CreatedAt:    user.CreatedAt,
 		})
@@ -181,35 +174,47 @@ func (u *UserRepository) ListUsers(ctx context.Context) ([]*repository.User, err
 	return result, nil
 }
 
-func (u *UserRepository) UpdateUserCredentials(ctx context.Context, id uuid.UUID, password string) error {
+func (u *UserRepository) UpdateUserCredentials(ctx context.Context, id uint32, password string) error {
 	hashPass, err := pkg.GenerateHashPassword(password, u.db.config.PASSWORD_COST)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to hash password: %v", err)
 	}
 
+	if id <= 0 {
+		return pkg.Errorf(pkg.INVALID_ERROR, "invalid user id")
+	}
+
 	err = u.queries.UpdateUserCredentials(ctx, generated.UpdateUserCredentialsParams{
-		ID:        id.String(),
-		Password:  hashPass,
-		UpdatedBy: id.String(),
-		UpdatedAt: time.Now(),
+		ID:       id,
+		Password: hashPass,
+		UpdatedBy: sql.NullInt32{
+			Valid: true,
+			Int32: int32(id),
+		},
 	})
 
 	return err
 }
 
-func (u *UserRepository) UpdateUserSubscriptionStatus(ctx context.Context, id uuid.UUID, status bool) error {
+func (u *UserRepository) UpdateUserSubscriptionStatus(ctx context.Context, id uint32, status bool) error {
+	if id <= 0 {
+		return pkg.Errorf(pkg.INVALID_ERROR, "invalid user id")
+	}
+
 	err := u.queries.UpdateSubscriptionStatus(ctx, generated.UpdateSubscriptionStatusParams{
-		ID:           id.String(),
+		ID:           id,
 		Subscription: status,
-		UpdatedBy:    id.String(),
-		UpdatedAt:    time.Now(),
+		UpdatedBy: sql.NullInt32{
+			Valid: true,
+			Int32: int32(id),
+		},
 	})
 
 	return err
 }
 
-func (u *UserRepository) UpdateRefreshToken(ctx context.Context, id uuid.UUID) (string, error) {
-	user, err := u.queries.GetUserById(ctx, id.String())
+func (u *UserRepository) UpdateRefreshToken(ctx context.Context, id uint32) (string, error) {
+	user, err := u.queries.GetUserById(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found with id %v", id)
@@ -218,23 +223,21 @@ func (u *UserRepository) UpdateRefreshToken(ctx context.Context, id uuid.UUID) (
 		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %v", err)
 	}
 
-	userID, _ := uuid.Parse(user.ID)
-
-	refreshToken, err := u.db.tokenMaker.CreateToken(userID, user.Email, u.db.config.REFRESH_TOKEN_DURATION)
+	refreshToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, u.db.config.REFRESH_TOKEN_DURATION)
 	if err != nil {
 		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create token: %v", err)
 	}
 
 	err = u.queries.UpdateRefreshToken(ctx, generated.UpdateRefreshTokenParams{
-		ID:           id.String(),
+		ID:           user.ID,
 		RefreshToken: refreshToken,
 	})
 
 	return refreshToken, err
 }
 
-func (u *UserRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	err := u.queries.DeleteUser(ctx, id.String())
+func (u *UserRepository) DeleteUser(ctx context.Context, id uint32) error {
+	err := u.queries.DeleteUser(ctx, id)
 
 	return err
 }

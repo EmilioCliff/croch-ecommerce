@@ -8,32 +8,31 @@ package generated
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 const createOrder = `-- name: CreateOrder :execresult
 INSERT INTO orders (
-  id, user_id, amount, shipping_address, shipping_amount
+  user_id, amount, shipping_address, shipping_amount, updated_by
 ) VALUES (
   ?, ?, ?, ?, ?
 )
 `
 
 type CreateOrderParams struct {
-	ID              string  `json:"id"`
-	UserID          string  `json:"user_id"`
+	UserID          uint32  `json:"user_id"`
 	Amount          float64 `json:"amount"`
 	ShippingAddress string  `json:"shipping_address"`
 	ShippingAmount  float64 `json:"shipping_amount"`
+	UpdatedBy       uint32  `json:"updated_by"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createOrder,
-		arg.ID,
 		arg.UserID,
 		arg.Amount,
 		arg.ShippingAddress,
 		arg.ShippingAmount,
+		arg.UpdatedBy,
 	)
 }
 
@@ -42,7 +41,7 @@ DELETE FROM orders
 WHERE id = ?
 `
 
-func (q *Queries) DeleteOrder(ctx context.Context, id string) error {
+func (q *Queries) DeleteOrder(ctx context.Context, id uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteOrder, id)
 	return err
 }
@@ -52,7 +51,7 @@ SELECT id, user_id, amount, shipping_amount, status, shipping_address, updated_b
 WHERE id = ?
 `
 
-func (q *Queries) GetOrder(ctx context.Context, id string) (Order, error) {
+func (q *Queries) GetOrder(ctx context.Context, id uint32) (Order, error) {
 	row := q.db.QueryRowContext(ctx, getOrder, id)
 	var i Order
 	err := row.Scan(
@@ -152,7 +151,7 @@ WHERE user_id = ?
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListUserOrders(ctx context.Context, userID string) ([]Order, error) {
+func (q *Queries) ListUserOrders(ctx context.Context, userID uint32) ([]Order, error) {
 	rows, err := q.db.QueryContext(ctx, listUserOrders, userID)
 	if err != nil {
 		return nil, err
@@ -189,23 +188,17 @@ const updateOrderStatus = `-- name: UpdateOrderStatus :exec
 UPDATE orders
   set status = ?,
   updated_by = ?,
-  updated_at = ?
+  updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
 `
 
 type UpdateOrderStatusParams struct {
-	Status    string    `json:"status"`
-	UpdatedBy string    `json:"updated_by"`
-	UpdatedAt time.Time `json:"updated_at"`
-	ID        string    `json:"id"`
+	Status    string `json:"status"`
+	UpdatedBy uint32 `json:"updated_by"`
+	ID        uint32 `json:"id"`
 }
 
 func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateOrderStatus,
-		arg.Status,
-		arg.UpdatedBy,
-		arg.UpdatedAt,
-		arg.ID,
-	)
+	_, err := q.db.ExecContext(ctx, updateOrderStatus, arg.Status, arg.UpdatedBy, arg.ID)
 	return err
 }

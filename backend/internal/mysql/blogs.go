@@ -7,7 +7,6 @@ import (
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 var _ repository.BlogRepository = (*BlogRepository)(nil)
@@ -32,7 +31,7 @@ func (b *BlogRepository) CreateBlog(ctx context.Context, blog *repository.Blog) 
 	}
 
 	result, err := b.queries.CreateBlog(ctx, generated.CreateBlogParams{
-		Author:  blog.Author.String(),
+		Author:  blog.Author,
 		Title:   blog.Title,
 		Content: blog.Content,
 		ImgUrls: blog.ImgUrls,
@@ -65,7 +64,7 @@ func (b *BlogRepository) GetBlog(ctx context.Context, id uint32) (*repository.Bl
 
 	return &repository.Blog{
 		ID:        blog.ID,
-		Author:    uuid.MustParse(blog.Author),
+		Author:    blog.Author,
 		Title:     blog.Title,
 		Content:   blog.Content,
 		ImgUrls:   blog.ImgUrls,
@@ -73,11 +72,11 @@ func (b *BlogRepository) GetBlog(ctx context.Context, id uint32) (*repository.Bl
 	}, nil
 }
 
-func (b *BlogRepository) GetBlogsByAuthor(ctx context.Context, author uuid.UUID) ([]*repository.Blog, error) {
-	blogs, err := b.queries.GetBlogsByAuthor(ctx, author.String())
+func (b *BlogRepository) GetBlogsByAuthor(ctx context.Context, author uint32) ([]*repository.Blog, error) {
+	blogs, err := b.queries.GetBlogsByAuthor(ctx, author)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no blog found with author %s", author.String())
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no blog found with author %s", author)
 		}
 
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get blogs: %v", err)
@@ -88,7 +87,7 @@ func (b *BlogRepository) GetBlogsByAuthor(ctx context.Context, author uuid.UUID)
 	for _, blog := range blogs {
 		result = append(result, &repository.Blog{
 			ID:        blog.ID,
-			Author:    uuid.MustParse(blog.Author),
+			Author:    blog.Author,
 			Title:     blog.Title,
 			Content:   blog.Content,
 			ImgUrls:   blog.ImgUrls,
@@ -110,7 +109,7 @@ func (b *BlogRepository) ListBlogs(ctx context.Context) ([]*repository.Blog, err
 	for _, blog := range blogs {
 		result = append(result, &repository.Blog{
 			ID:        blog.ID,
-			Author:    uuid.MustParse(blog.Author),
+			Author:    blog.Author,
 			Title:     blog.Title,
 			Content:   blog.Content,
 			ImgUrls:   blog.ImgUrls,

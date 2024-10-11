@@ -7,7 +7,6 @@ import (
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 var _ repository.CartRepository = (*CartRepository)(nil)
@@ -32,8 +31,8 @@ func (c *CartRepository) CreateCart(ctx context.Context, cart *repository.Cart) 
 	}
 
 	_, err := c.queries.CreateCart(ctx, generated.CreateCartParams{
-		UserID:    cart.UserID.String(),
-		ProductID: cart.ProductID.String(),
+		UserID:    cart.UserID,
+		ProductID: cart.ProductID,
 		Quantity:  cart.Quantity,
 	})
 	if err != nil {
@@ -56,8 +55,8 @@ func (c *CartRepository) ListCarts(ctx context.Context) ([]*repository.Cart, err
 	var result []*repository.Cart
 	for _, cart := range carts {
 		result = append(result, &repository.Cart{
-			UserID:    uuid.MustParse(cart.UserID),
-			ProductID: uuid.MustParse(cart.ProductID),
+			UserID:    cart.UserID,
+			ProductID: cart.ProductID,
 			Quantity:  cart.Quantity,
 			CreatedAt: cart.CreatedAt,
 		})
@@ -66,8 +65,8 @@ func (c *CartRepository) ListCarts(ctx context.Context) ([]*repository.Cart, err
 	return result, nil
 }
 
-func (c *CartRepository) ListUserCarts(ctx context.Context, userID uuid.UUID) ([]*repository.Cart, error) {
-	carts, err := c.queries.ListUserCarts(ctx, userID.String())
+func (c *CartRepository) ListUserCarts(ctx context.Context, userID uint32) ([]*repository.Cart, error) {
+	carts, err := c.queries.ListUserCarts(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "user cart is empty")
@@ -79,8 +78,8 @@ func (c *CartRepository) ListUserCarts(ctx context.Context, userID uuid.UUID) ([
 	var result []*repository.Cart
 	for _, cart := range carts {
 		result = append(result, &repository.Cart{
-			UserID:    uuid.MustParse(cart.UserID),
-			ProductID: uuid.MustParse(cart.ProductID),
+			UserID:    cart.UserID,
+			ProductID: cart.ProductID,
 			Quantity:  cart.Quantity,
 			CreatedAt: cart.CreatedAt,
 		})
@@ -89,8 +88,8 @@ func (c *CartRepository) ListUserCarts(ctx context.Context, userID uuid.UUID) ([
 	return result, nil
 }
 
-func (c *CartRepository) ListProductInCarts(ctx context.Context, productID uuid.UUID) ([]*repository.Cart, error) {
-	carts, err := c.queries.ListProductInCarts(ctx, productID.String())
+func (c *CartRepository) ListProductInCarts(ctx context.Context, productID uint32) ([]*repository.Cart, error) {
+	carts, err := c.queries.ListProductInCarts(ctx, productID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "product is not in cart")
@@ -102,8 +101,8 @@ func (c *CartRepository) ListProductInCarts(ctx context.Context, productID uuid.
 	var result []*repository.Cart
 	for _, cart := range carts {
 		result = append(result, &repository.Cart{
-			UserID:    uuid.MustParse(cart.UserID),
-			ProductID: uuid.MustParse(cart.ProductID),
+			UserID:    cart.UserID,
+			ProductID: cart.ProductID,
 			Quantity:  cart.Quantity,
 			CreatedAt: cart.CreatedAt,
 		})
@@ -112,11 +111,11 @@ func (c *CartRepository) ListProductInCarts(ctx context.Context, productID uuid.
 	return result, nil
 }
 
-func (c *CartRepository) UpdateCart(ctx context.Context, quantity uint32, userID uuid.UUID, productID uuid.UUID) error {
+func (c *CartRepository) UpdateCart(ctx context.Context, quantity uint32, userID uint32, productID uint32) error {
 	err := c.queries.UpdateUserCart(ctx, generated.UpdateUserCartParams{
 		Quantity:  quantity,
-		UserID:    userID.String(),
-		ProductID: productID.String(),
+		UserID:    userID,
+		ProductID: productID,
 	})
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update cart: %v", err)
@@ -125,8 +124,8 @@ func (c *CartRepository) UpdateCart(ctx context.Context, quantity uint32, userID
 	return nil
 }
 
-func (c *CartRepository) DeleteCart(ctx context.Context, userID uuid.UUID) error {
-	err := c.queries.DeleteUserCart(ctx, userID.String())
+func (c *CartRepository) DeleteCart(ctx context.Context, userID uint32) error {
+	err := c.queries.DeleteUserCart(ctx, userID)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete users cart: %v", err)
 	}

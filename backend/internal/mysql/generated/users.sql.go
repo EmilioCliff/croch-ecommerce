@@ -8,33 +8,32 @@ package generated
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 const createUser = `-- name: CreateUser :execresult
 INSERT INTO users
-    (id, email, password, subscription, role, refresh_token)
+    (email, password, subscription, role, refresh_token, updated_by)
 VALUES
     (?, ?, ?, ?, ?, ?)
 `
 
 type CreateUserParams struct {
-	ID           string `json:"id"`
-	Email        string `json:"email"`
-	Password     string `json:"password"`
-	Subscription bool   `json:"subscription"`
-	Role         string `json:"role"`
-	RefreshToken string `json:"refresh_token"`
+	Email        string        `json:"email"`
+	Password     string        `json:"password"`
+	Subscription bool          `json:"subscription"`
+	Role         string        `json:"role"`
+	RefreshToken string        `json:"refresh_token"`
+	UpdatedBy    sql.NullInt32 `json:"updated_by"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createUser,
-		arg.ID,
 		arg.Email,
 		arg.Password,
 		arg.Subscription,
 		arg.Role,
 		arg.RefreshToken,
+		arg.UpdatedBy,
 	)
 }
 
@@ -43,7 +42,7 @@ DELETE FROM users
 WHERE id = ?
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id string) error {
+func (q *Queries) DeleteUser(ctx context.Context, id uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
 }
@@ -114,7 +113,7 @@ SELECT id, email, password, subscription, role, refresh_token, updated_by, updat
 WHERE id = ? LIMIT 1
 `
 
-func (q *Queries) GetUserById(ctx context.Context, id string) (User, error) {
+func (q *Queries) GetUserById(ctx context.Context, id uint32) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i User
 	err := row.Scan(
@@ -177,7 +176,7 @@ WHERE id = ?
 
 type UpdateRefreshTokenParams struct {
 	RefreshToken string `json:"refresh_token"`
-	ID           string `json:"id"`
+	ID           uint32 `json:"id"`
 }
 
 func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error {
@@ -188,49 +187,37 @@ func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshToken
 const updateSubscriptionStatus = `-- name: UpdateSubscriptionStatus :exec
 UPDATE users
   set subscription = ?,
-  updated_at = ?,
+  updated_at = CURRENT_TIMESTAMP,
   updated_by = ?
 WHERE id = ?
 `
 
 type UpdateSubscriptionStatusParams struct {
-	Subscription bool      `json:"subscription"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	UpdatedBy    string    `json:"updated_by"`
-	ID           string    `json:"id"`
+	Subscription bool          `json:"subscription"`
+	UpdatedBy    sql.NullInt32 `json:"updated_by"`
+	ID           uint32        `json:"id"`
 }
 
 func (q *Queries) UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateSubscriptionStatus,
-		arg.Subscription,
-		arg.UpdatedAt,
-		arg.UpdatedBy,
-		arg.ID,
-	)
+	_, err := q.db.ExecContext(ctx, updateSubscriptionStatus, arg.Subscription, arg.UpdatedBy, arg.ID)
 	return err
 }
 
 const updateUserCredentials = `-- name: UpdateUserCredentials :exec
 UPDATE users
   set password = ?,
-  updated_at = ?,
+  updated_at = CURRENT_TIMESTAMP,
   updated_by = ?
 WHERE id = ?
 `
 
 type UpdateUserCredentialsParams struct {
-	Password  string    `json:"password"`
-	UpdatedAt time.Time `json:"updated_at"`
-	UpdatedBy string    `json:"updated_by"`
-	ID        string    `json:"id"`
+	Password  string        `json:"password"`
+	UpdatedBy sql.NullInt32 `json:"updated_by"`
+	ID        uint32        `json:"id"`
 }
 
 func (q *Queries) UpdateUserCredentials(ctx context.Context, arg UpdateUserCredentialsParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserCredentials,
-		arg.Password,
-		arg.UpdatedAt,
-		arg.UpdatedBy,
-		arg.ID,
-	)
+	_, err := q.db.ExecContext(ctx, updateUserCredentials, arg.Password, arg.UpdatedBy, arg.ID)
 	return err
 }

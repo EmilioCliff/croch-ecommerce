@@ -5,13 +5,14 @@
 package generated
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 )
 
 type Blog struct {
 	ID        uint32          `json:"id"`
-	Author    string          `json:"author"`
+	Author    uint32          `json:"author"`
 	Title     string          `json:"title"`
 	Content   string          `json:"content"`
 	ImgUrls   json.RawMessage `json:"img_urls"`
@@ -19,8 +20,8 @@ type Blog struct {
 }
 
 type Cart struct {
-	UserID    string `json:"user_id"`
-	ProductID string `json:"product_id"`
+	UserID    uint32 `json:"user_id"`
+	ProductID uint32 `json:"product_id"`
 	Quantity  uint32 `json:"quantity"`
 	// will be used to check how long the cart has stayed
 	CreatedAt time.Time `json:"created_at"`
@@ -33,8 +34,8 @@ type Category struct {
 }
 
 type Order struct {
-	ID     string `json:"id"`
-	UserID string `json:"user_id"`
+	ID     uint32 `json:"id"`
+	UserID uint32 `json:"user_id"`
 	// total amount of money for the order
 	Amount float64 `json:"amount"`
 	// shipping cost
@@ -42,14 +43,14 @@ type Order struct {
 	// PENDING, PROCESSING, SHIPPED or DELIVERED
 	Status          string    `json:"status"`
 	ShippingAddress string    `json:"shipping_address"`
-	UpdatedBy       string    `json:"updated_by"`
+	UpdatedBy       uint32    `json:"updated_by"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	CreatedAt       time.Time `json:"created_at"`
 }
 
 type OrderItem struct {
-	OrderID   string  `json:"order_id"`
-	ProductID string  `json:"product_id"`
+	OrderID   uint32  `json:"order_id"`
+	ProductID uint32  `json:"product_id"`
 	Quantity  uint32  `json:"quantity"`
 	Price     float64 `json:"price"`
 	Color     string  `json:"color"`
@@ -57,7 +58,7 @@ type OrderItem struct {
 }
 
 type Product struct {
-	ID              string          `json:"id"`
+	ID              uint32          `json:"id"`
 	Name            string          `json:"name"`
 	Description     string          `json:"description"`
 	RegularPrice    float64         `json:"regular_price"`
@@ -71,30 +72,30 @@ type Product struct {
 	Seasonal  bool            `json:"seasonal"`
 	Featured  bool            `json:"featured"`
 	ImgUrls   json.RawMessage `json:"img_urls"`
-	UpdatedBy string          `json:"updated_by"`
+	UpdatedBy uint32          `json:"updated_by"`
 	UpdatedAt time.Time       `json:"updated_at"`
 	CreatedAt time.Time       `json:"created_at"`
 }
 
 type Review struct {
 	ID        uint32    `json:"id"`
-	UserID    string    `json:"user_id"`
-	ProductID string    `json:"product_id"`
+	UserID    uint32    `json:"user_id"`
+	ProductID uint32    `json:"product_id"`
 	Rating    uint32    `json:"rating"`
 	Review    string    `json:"review"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type User struct {
-	ID       string `json:"id"`
+	ID       uint32 `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	// subscription to our blog posts
 	Subscription bool `json:"subscription"`
 	// USER or ADMIN
-	Role         string    `json:"role"`
-	RefreshToken string    `json:"refresh_token"`
-	UpdatedBy    string    `json:"updated_by"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	CreatedAt    time.Time `json:"created_at"`
+	Role         string        `json:"role"`
+	RefreshToken string        `json:"refresh_token"`
+	UpdatedBy    sql.NullInt32 `json:"updated_by"`
+	UpdatedAt    time.Time     `json:"updated_at"`
+	CreatedAt    time.Time     `json:"created_at"`
 }

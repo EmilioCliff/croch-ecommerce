@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/aead/chacha20poly1305"
-	"github.com/google/uuid"
 	"github.com/o1egl/paseto"
 )
 
 var ErrTokenExpired = errors.New("Token has expired")
 
 type Maker interface {
-	CreateToken(userID uuid.UUID, email string, duration time.Duration) (string, error)
+	CreateToken(userID uint32, email string, duration time.Duration) (string, error)
 	VerifyToken(token string) (*Payload, error)
 }
 
@@ -37,7 +36,7 @@ func NewPaseto(symmetricKey string) (*PasetoMaker, error) {
 	return maker, nil
 }
 
-func (maker *PasetoMaker) CreateToken(userID uuid.UUID, email string, duration time.Duration) (string, error) {
+func (maker *PasetoMaker) CreateToken(userID uint32, email string, duration time.Duration) (string, error) {
 	payload, err := NewPayload(userID, email, duration)
 	if err != nil {
 		return "", err

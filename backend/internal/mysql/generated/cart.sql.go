@@ -20,8 +20,8 @@ INSERT INTO cart (
 `
 
 type CreateCartParams struct {
-	UserID    string `json:"user_id"`
-	ProductID string `json:"product_id"`
+	UserID    uint32 `json:"user_id"`
+	ProductID uint32 `json:"product_id"`
 	Quantity  uint32 `json:"quantity"`
 }
 
@@ -34,7 +34,7 @@ DELETE FROM cart
 WHERE user_id = ?
 `
 
-func (q *Queries) DeleteUserCart(ctx context.Context, userID string) error {
+func (q *Queries) DeleteUserCart(ctx context.Context, userID uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteUserCart, userID)
 	return err
 }
@@ -112,7 +112,7 @@ WHERE product_id = ?
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListProductInCarts(ctx context.Context, productID string) ([]Cart, error) {
+func (q *Queries) ListProductInCarts(ctx context.Context, productID uint32) ([]Cart, error) {
 	rows, err := q.db.QueryContext(ctx, listProductInCarts, productID)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ WHERE user_id = ?
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListUserCarts(ctx context.Context, userID string) ([]Cart, error) {
+func (q *Queries) ListUserCarts(ctx context.Context, userID uint32) ([]Cart, error) {
 	rows, err := q.db.QueryContext(ctx, listUserCarts, userID)
 	if err != nil {
 		return nil, err
@@ -182,8 +182,8 @@ WHERE user_id = ? AND product_id = ?
 
 type UpdateUserCartParams struct {
 	Quantity  uint32 `json:"quantity"`
-	UserID    string `json:"user_id"`
-	ProductID string `json:"product_id"`
+	UserID    uint32 `json:"user_id"`
+	ProductID uint32 `json:"product_id"`
 }
 
 func (q *Queries) UpdateUserCart(ctx context.Context, arg UpdateUserCartParams) error {

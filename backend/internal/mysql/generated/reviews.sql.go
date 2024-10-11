@@ -19,8 +19,8 @@ INSERT INTO reviews (
 `
 
 type CreateReviewParams struct {
-	UserID    string `json:"user_id"`
-	ProductID string `json:"product_id"`
+	UserID    uint32 `json:"user_id"`
+	ProductID uint32 `json:"product_id"`
 	Rating    uint32 `json:"rating"`
 	Review    string `json:"review"`
 }
@@ -69,7 +69,7 @@ WHERE product_id = ?
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListProductsReviews(ctx context.Context, productID string) ([]Review, error) {
+func (q *Queries) ListProductsReviews(ctx context.Context, productID uint32) ([]Review, error) {
 	rows, err := q.db.QueryContext(ctx, listProductsReviews, productID)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ WHERE user_id = ?
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListUsersReviews(ctx context.Context, userID string) ([]Review, error) {
+func (q *Queries) ListUsersReviews(ctx context.Context, userID uint32) ([]Review, error) {
 	rows, err := q.db.QueryContext(ctx, listUsersReviews, userID)
 	if err != nil {
 		return nil, err

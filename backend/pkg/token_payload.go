@@ -8,13 +8,13 @@ import (
 
 type Payload struct {
 	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
+	UserID    uint32    `json:"user_id"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiryAt  time.Time `json:"expiry_at"`
 }
 
-func NewPayload(userID uuid.UUID, email string, duration time.Duration) (*Payload, error) {
+func NewPayload(userID uint32, email string, duration time.Duration) (*Payload, error) {
 	tokenId, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err

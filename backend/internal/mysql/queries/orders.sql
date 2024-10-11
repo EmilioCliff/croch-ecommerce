@@ -18,7 +18,7 @@ ORDER BY created_at DESC;
 
 -- name: CreateOrder :execresult
 INSERT INTO orders (
-  id, user_id, amount, shipping_address, shipping_amount
+  user_id, amount, shipping_address, shipping_amount, updated_by
 ) VALUES (
   ?, ?, ?, ?, ?
 );
@@ -31,5 +31,5 @@ WHERE id = ?;
 UPDATE orders
   set status = ?,
   updated_by = ?,
-  updated_at = ?
+  updated_at = CURRENT_TIMESTAMP
 WHERE id = ?;

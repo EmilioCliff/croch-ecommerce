@@ -5,22 +5,21 @@ import (
 	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 type Cart struct {
-	UserID    uuid.UUID `json:"user_id"`
-	ProductID uuid.UUID `json:"product_id"`
+	UserID    uint32    `json:"user_id"`
+	ProductID uint32    `json:"product_id"`
 	Quantity  uint32    `json:"quantity"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 func (c *Cart) Validate() error {
-	if c.UserID == uuid.Nil {
+	if c.UserID <= 0 {
 		return pkg.Errorf(pkg.INVALID_ERROR, "user id cannot be nil")
 	}
 
-	if c.ProductID == uuid.Nil {
+	if c.ProductID <= 0 {
 		return pkg.Errorf(pkg.INVALID_ERROR, "product id cannot be nil")
 	}
 
@@ -34,8 +33,8 @@ func (c *Cart) Validate() error {
 type CartRepository interface {
 	CreateCart(ctx context.Context, cart *Cart) (*Cart, error)
 	ListCarts(ctx context.Context) ([]*Cart, error)
-	ListUserCarts(ctx context.Context, userID uuid.UUID) ([]*Cart, error)
-	ListProductInCarts(ctx context.Context, productID uuid.UUID) ([]*Cart, error)
-	UpdateCart(ctx context.Context, quantity uint32, userID uuid.UUID, productID uuid.UUID) error
-	DeleteCart(ctx context.Context, userID uuid.UUID) error
+	ListUserCarts(ctx context.Context, userID uint32) ([]*Cart, error)
+	ListProductInCarts(ctx context.Context, productID uint32) ([]*Cart, error)
+	UpdateCart(ctx context.Context, quantity uint32, userID uint32, productID uint32) error
+	DeleteCart(ctx context.Context, userID uint32) error
 }

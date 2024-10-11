@@ -2,16 +2,14 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type userResponse struct {
-	ID           string `json:"id"`
+	ID           uint32 `json:"id"`
 	Email        string `json:"email"`
 	Role         string `json:"role"`
 	Subscription bool   `json:"subscription"`
@@ -24,15 +22,15 @@ type createUserRequest struct {
 }
 
 type createUserResponse struct {
-	ID                      string        `json:"id"`
-	AccessToken             string        `json:"access_token"`
-	AccessTokenExpiresAfter time.Duration `json:"access_token_expires_after"`
+	ID                      uint32 `json:"id"`
+	AccessToken             string `json:"access_token"`
+	AccessTokenExpiresAfter int64  `json:"access_token_expires_after"`
 }
 
 func (s *HttpServer) createUser(ctx *gin.Context) {
 	var req createUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
@@ -49,32 +47,25 @@ func (s *HttpServer) createUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, createUserResponse{
-		ID:                      user.ID.String(),
+		ID:                      user.ID,
 		AccessToken:             user.RefreshToken,
-		AccessTokenExpiresAfter: s.config.TOKEN_DURATION,
+		AccessTokenExpiresAfter: int64(s.config.TOKEN_DURATION.Seconds()),
 	})
 }
 
 type getUserRequest struct {
-	ID string `binding:"required" uri:"id"`
+	ID uint32 `binding:"required" uri:"id"`
 }
 
 func (s *HttpServer) getUser(ctx *gin.Context) {
 	var uri getUserRequest
 	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	id, err := uuid.Parse(uri.ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	user, err := s.repo.u.GetUserById(ctx, id)
+	user, err := s.repo.u.GetUserById(ctx, uri.ID)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -82,7 +73,7 @@ func (s *HttpServer) getUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, userResponse{
-		ID:           user.ID.String(),
+		ID:           user.ID,
 		Email:        user.Email,
 		Role:         user.Role,
 		Subscription: user.Subscription,
@@ -95,17 +86,17 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
-	ID                       string        `json:"id"`
-	AccessToken              string        `json:"access_token"`
-	RefreshToken             string        `json:"refresh_token"`
-	AccessTokenExpiresAfter  time.Duration `json:"access_token_expires_after"`
-	RefreshTokenExpiresAfter time.Duration `json:"refresh_token_expires_after"`
+	ID                       uint32 `json:"id"`
+	AccessToken              string `json:"access_token"`
+	RefreshToken             string `json:"refresh_token"`
+	AccessTokenExpiresAfter  int64  `json:"access_token_expires_after"`
+	RefreshTokenExpiresAfter int64  `json:"refresh_token_expires_after"`
 }
 
 func (s *HttpServer) loginUser(ctx *gin.Context) {
 	var req loginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
@@ -133,34 +124,27 @@ func (s *HttpServer) loginUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, loginUserResponse{
-		ID:                       user.ID.String(),
+		ID:                       user.ID,
 		AccessToken:              accesstoken,
 		RefreshToken:             user.RefreshToken,
-		AccessTokenExpiresAfter:  s.config.TOKEN_DURATION,
-		RefreshTokenExpiresAfter: s.config.REFRESH_TOKEN_DURATION,
+		AccessTokenExpiresAfter:  int64(s.config.TOKEN_DURATION.Seconds()),
+		RefreshTokenExpiresAfter: int64(s.config.REFRESH_TOKEN_DURATION.Seconds()),
 	})
 }
 
 type refreshTokenRequest struct {
-	ID string `binding:"required" uri:"id"`
+	ID uint32 `binding:"required" uri:"id"`
 }
 
 func (s *HttpServer) refreshToken(ctx *gin.Context) {
 	var uri refreshTokenRequest
 	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	id, err := uuid.Parse(uri.ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	user, err := s.repo.u.GetUserById(ctx, id)
+	user, err := s.repo.u.GetUserById(ctx, uri.ID)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -188,11 +172,11 @@ func (s *HttpServer) refreshToken(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, loginUserResponse{
-		ID:                       user.ID.String(),
+		ID:                       user.ID,
 		AccessToken:              accesstoken,
 		RefreshToken:             refreshToken,
-		AccessTokenExpiresAfter:  s.config.TOKEN_DURATION,
-		RefreshTokenExpiresAfter: s.config.REFRESH_TOKEN_DURATION,
+		AccessTokenExpiresAfter:  int64(s.config.TOKEN_DURATION.Seconds()),
+		RefreshTokenExpiresAfter: int64(s.config.REFRESH_TOKEN_DURATION.Seconds()),
 	})
 }
 
@@ -203,7 +187,7 @@ type resetPasswordRequest struct {
 func (s *HttpServer) resetPassword(ctx *gin.Context) {
 	var req resetPasswordRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
@@ -212,7 +196,7 @@ func (s *HttpServer) resetPassword(ctx *gin.Context) {
 	ctx.JSON(http.StatusNotImplemented, gin.H{})
 }
 
-func (s HttpServer) listUsers(ctx *gin.Context) {
+func (s *HttpServer) listUsers(ctx *gin.Context) {
 	users, err := s.repo.u.ListUsers(ctx)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
@@ -223,7 +207,7 @@ func (s HttpServer) listUsers(ctx *gin.Context) {
 	var response []userResponse
 	for _, user := range users {
 		response = append(response, userResponse{
-			ID:           user.ID.String(),
+			ID:           user.ID,
 			Email:        user.Email,
 			Role:         user.Role,
 			Subscription: user.Subscription,
@@ -233,36 +217,30 @@ func (s HttpServer) listUsers(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-type updateUserSubscriptionRequest struct {
-	ID string `binding:"required" uri:"id"`
+type updateUserSubscriptionRequestUri struct {
+	ID uint32 `binding:"required" uri:"id"`
+}
 
+type updateUserSubscriptionRequestBody struct {
 	Subscription bool `binding:"required" json:"subscription"`
 }
 
 func (s *HttpServer) updateUserSubscription(ctx *gin.Context) {
-	var uri updateUserSubscriptionRequest
+	var uri updateUserSubscriptionRequestUri
 	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	var req updateUserSubscriptionRequest
+	var req updateUserSubscriptionRequestBody
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	id, err := uuid.Parse(uri.ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	err = s.repo.u.UpdateUserSubscriptionStatus(ctx, id, req.Subscription)
-	if err != nil {
+	if err := s.repo.u.UpdateUserSubscriptionStatus(ctx, uri.ID, req.Subscription); err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
 		return

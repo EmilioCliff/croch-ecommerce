@@ -7,7 +7,6 @@ import (
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 var _ repository.ProductRepository = (*ProductRepository)(nil)
@@ -27,19 +26,11 @@ func NewProductRepository(store *Store) *ProductRepository {
 }
 
 func (p *ProductRepository) CreateProduct(ctx context.Context, product *repository.Product) (*repository.Product, error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to generate uuid: %v", err)
-	}
-
-	product.ID = id
-
 	if err := product.Validate(); err != nil {
 		return nil, pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
 	}
 
-	_, err = p.queries.CreateProduct(ctx, generated.CreateProductParams{
-		ID:              product.ID.String(),
+	result, err := p.queries.CreateProduct(ctx, generated.CreateProductParams{
 		Name:            product.Name,
 		Description:     product.Description,
 		RegularPrice:    product.RegularPrice,
@@ -51,17 +42,24 @@ func (p *ProductRepository) CreateProduct(ctx context.Context, product *reposito
 		Seasonal:        product.Seasonal,
 		Featured:        product.Featured,
 		ImgUrls:         product.ImgUrls,
-		UpdatedBy:       product.UpdatedBy.String(),
+		UpdatedBy:       product.UpdatedBy,
 	})
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create product: %v", err)
 	}
 
+	createdID, err := result.LastInsertId()
+	if err != nil {
+		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get last inserted id: %v", err)
+	}
+
+	product.ID = uint32(createdID)
+
 	return product, nil
 }
 
-func (p *ProductRepository) GetProduct(ctx context.Context, id uuid.UUID) (*repository.Product, error) {
-	product, err := p.queries.GetProduct(ctx, id.String())
+func (p *ProductRepository) GetProduct(ctx context.Context, id uint32) (*repository.Product, error) {
+	product, err := p.queries.GetProduct(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "product not found")
@@ -80,7 +78,7 @@ func (p *ProductRepository) UpdateProduct(ctx context.Context, product *reposito
 
 	var req generated.UpdateProductParams
 
-	req.ID = product.ID.String()
+	req.ID = product.ID
 
 	if product.Name != nil {
 		req.Name = sql.NullString{
@@ -144,8 +142,8 @@ func (p *ProductRepository) UpdateProduct(ctx context.Context, product *reposito
 		req.ImgUrls = *product.ImgUrls
 	}
 
-	if product.UpdatedBy != uuid.Nil {
-		req.UpdatedBy = product.UpdatedBy.String()
+	if product.UpdatedBy <= 0 {
+		req.UpdatedBy = product.UpdatedBy
 	}
 
 	err := p.queries.UpdateProduct(ctx, req)
@@ -264,8 +262,8 @@ func (p *ProductRepository) ListProductsByCategory(ctx context.Context, category
 	return result, nil
 }
 
-func (p *ProductRepository) DeleteProduct(ctx context.Context, id uuid.UUID) error {
-	err := p.queries.DeleteProduct(ctx, id.String())
+func (p *ProductRepository) DeleteProduct(ctx context.Context, id uint32) error {
+	err := p.queries.DeleteProduct(ctx, id)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete product: %v", err)
 	}
@@ -275,7 +273,7 @@ func (p *ProductRepository) DeleteProduct(ctx context.Context, id uuid.UUID) err
 
 func toRepositoryProduct(product generated.Product) *repository.Product {
 	return &repository.Product{
-		ID:              uuid.MustParse(product.ID),
+		ID:              product.ID,
 		Name:            product.Name,
 		Description:     product.Description,
 		RegularPrice:    product.RegularPrice,
@@ -288,7 +286,7 @@ func toRepositoryProduct(product generated.Product) *repository.Product {
 		Seasonal:        product.Seasonal,
 		Featured:        product.Featured,
 		ImgUrls:         product.ImgUrls,
-		UpdatedBy:       uuid.MustParse(product.UpdatedBy),
+		UpdatedBy:       product.UpdatedBy,
 		UpdatedAt:       product.UpdatedAt,
 		CreatedAt:       product.CreatedAt,
 	}

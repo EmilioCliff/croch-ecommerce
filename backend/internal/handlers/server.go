@@ -65,9 +65,9 @@ func (s *HttpServer) setRoutes() {
 	users.POST("/register", s.createUser)
 	users.GET("/:id", s.getUser)
 	users.POST("/login", s.loginUser)
-	users.GET("/refresh-token", s.refreshToken)
+	users.GET("/:id/refresh-token", s.refreshToken)
 	users.POST("/reset-password", s.resetPassword)
-	users.POST("/update-subscription", s.updateUserSubscription)
+	users.POST("/:id/update-subscription", s.updateUserSubscription)
 }
 
 func (s *HttpServer) healthCheckHandler(c *gin.Context) {
@@ -102,13 +102,15 @@ func (s *HttpServer) Close() error {
 }
 
 func (s *HttpServer) SetDependencies(store *mysql.Store) {
-	s.repo.u = mysql.NewUserRepository(store)
-	s.repo.p = mysql.NewProductRepository(store)
-	// order repo
-	s.repo.cart = mysql.NewCartRepository(store)
-	s.repo.cate = mysql.NewCategoryRepository(store)
-	s.repo.r = mysql.NewReviewRepository(store)
-	s.repo.b = mysql.NewBlogRepository(store)
+	s.repo = MySQLRepository{
+		u:    mysql.NewUserRepository(store),
+		p:    mysql.NewProductRepository(store),
+		cart: mysql.NewCartRepository(store),
+		// o:    mysql.NewOrderRepository(store),
+		cate: mysql.NewCategoryRepository(store),
+		r:    mysql.NewReviewRepository(store),
+		b:    mysql.NewBlogRepository(store),
+	}
 }
 
 func errorResponse(err error) gin.H {

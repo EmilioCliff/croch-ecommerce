@@ -33,9 +33,9 @@ WHERE id = ? LIMIT 1;
 
 -- name: CreateProduct :execresult
 INSERT INTO products (
-  id, name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, seasonal, featured, img_urls, updated_by
+  name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, seasonal, featured, img_urls, updated_by
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 );
 
 -- name: DeleteProduct :exec

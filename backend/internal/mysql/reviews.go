@@ -6,7 +6,6 @@ import (
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 var _ repository.ReviewRepository = (*ReviewsRepository)(nil)
@@ -31,8 +30,8 @@ func (r *ReviewsRepository) CreateReview(ctx context.Context, review *repository
 	}
 
 	result, err := r.queries.CreateReview(ctx, generated.CreateReviewParams{
-		ProductID: review.ProductID.String(),
-		UserID:    review.UserID.String(),
+		ProductID: review.ProductID,
+		UserID:    review.UserID,
 		Rating:    review.Rating,
 		Review:    review.Review,
 	})
@@ -48,7 +47,7 @@ func (r *ReviewsRepository) CreateReview(ctx context.Context, review *repository
 	review.ID = uint32(id)
 
 	// update the products new rating
-	err = r.queries.UpdateRating(ctx, review.ProductID.String())
+	err = r.queries.UpdateRating(ctx, review.ProductID)
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update rating: %v", err)
 	}
@@ -64,8 +63,8 @@ func (r *ReviewsRepository) GetReview(ctx context.Context, id uint32) (*reposito
 
 	return &repository.Review{
 		ID:        review.ID,
-		ProductID: uuid.MustParse(review.ProductID),
-		UserID:    uuid.MustParse(review.UserID),
+		ProductID: review.ProductID,
+		UserID:    review.UserID,
 		Rating:    review.Rating,
 		Review:    review.Review,
 	}, nil
@@ -81,8 +80,8 @@ func (r *ReviewsRepository) ListReviews(ctx context.Context) ([]*repository.Revi
 	for _, review := range reviews {
 		result = append(result, &repository.Review{
 			ID:        review.ID,
-			ProductID: uuid.MustParse(review.ProductID),
-			UserID:    uuid.MustParse(review.UserID),
+			ProductID: review.ProductID,
+			UserID:    review.UserID,
 			Rating:    review.Rating,
 			Review:    review.Review,
 		})
@@ -91,8 +90,8 @@ func (r *ReviewsRepository) ListReviews(ctx context.Context) ([]*repository.Revi
 	return result, nil
 }
 
-func (r *ReviewsRepository) ListUsersReviews(ctx context.Context, userID uuid.UUID) ([]*repository.Review, error) {
-	reviews, err := r.queries.ListUsersReviews(ctx, userID.String())
+func (r *ReviewsRepository) ListUsersReviews(ctx context.Context, userID uint32) ([]*repository.Review, error) {
+	reviews, err := r.queries.ListUsersReviews(ctx, userID)
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "%v", err)
 	}
@@ -101,8 +100,8 @@ func (r *ReviewsRepository) ListUsersReviews(ctx context.Context, userID uuid.UU
 	for _, review := range reviews {
 		result = append(result, &repository.Review{
 			ID:        review.ID,
-			ProductID: uuid.MustParse(review.ProductID),
-			UserID:    uuid.MustParse(review.UserID),
+			ProductID: review.ProductID,
+			UserID:    review.UserID,
 			Rating:    review.Rating,
 			Review:    review.Review,
 		})
@@ -111,8 +110,8 @@ func (r *ReviewsRepository) ListUsersReviews(ctx context.Context, userID uuid.UU
 	return result, nil
 }
 
-func (r *ReviewsRepository) ListProductsReviews(ctx context.Context, productID uuid.UUID) ([]*repository.Review, error) {
-	reviews, err := r.queries.ListProductsReviews(ctx, productID.String())
+func (r *ReviewsRepository) ListProductsReviews(ctx context.Context, productID uint32) ([]*repository.Review, error) {
+	reviews, err := r.queries.ListProductsReviews(ctx, productID)
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "%v", err)
 	}
@@ -121,8 +120,8 @@ func (r *ReviewsRepository) ListProductsReviews(ctx context.Context, productID u
 	for _, review := range reviews {
 		result = append(result, &repository.Review{
 			ID:        review.ID,
-			ProductID: uuid.MustParse(review.ProductID),
-			UserID:    uuid.MustParse(review.UserID),
+			ProductID: review.ProductID,
+			UserID:    review.UserID,
 			Rating:    review.Rating,
 			Review:    review.Review,
 		})

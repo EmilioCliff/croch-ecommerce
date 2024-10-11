@@ -1,0 +1,3 @@
+MIGRATION_PATH=file:///app/internal/mysql/migrations
+CONFIG_PATH=/app/.envs/.local/
+DB_DSN=myuser:mypassword@tcp(mysql:3306)/mydatabase?multiStatements=true&parseTime=true

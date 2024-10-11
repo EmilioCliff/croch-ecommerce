@@ -17,7 +17,7 @@ ORDER BY email;
 
 -- name: CreateUser :execresult
 INSERT INTO users
-    (id, email, password, subscription, role, refresh_token)
+    (email, password, subscription, role, refresh_token, updated_by)
 VALUES
     (?, ?, ?, ?, ?, ?);
 
@@ -28,14 +28,14 @@ WHERE id = ?;
 -- name: UpdateUserCredentials :exec
 UPDATE users
   set password = ?,
-  updated_at = ?,
+  updated_at = CURRENT_TIMESTAMP,
   updated_by = ?
 WHERE id = ?;
 
 -- name: UpdateSubscriptionStatus :exec
 UPDATE users
   set subscription = ?,
-  updated_at = ?,
+  updated_at = CURRENT_TIMESTAMP,
   updated_by = ?
 WHERE id = ?;
 

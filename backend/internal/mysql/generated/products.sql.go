@@ -13,14 +13,13 @@ import (
 
 const createProduct = `-- name: CreateProduct :execresult
 INSERT INTO products (
-  id, name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, seasonal, featured, img_urls, updated_by
+  name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, seasonal, featured, img_urls, updated_by
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 )
 `
 
 type CreateProductParams struct {
-	ID              string          `json:"id"`
 	Name            string          `json:"name"`
 	Description     string          `json:"description"`
 	RegularPrice    float64         `json:"regular_price"`
@@ -32,12 +31,11 @@ type CreateProductParams struct {
 	Seasonal        bool            `json:"seasonal"`
 	Featured        bool            `json:"featured"`
 	ImgUrls         json.RawMessage `json:"img_urls"`
-	UpdatedBy       string          `json:"updated_by"`
+	UpdatedBy       uint32          `json:"updated_by"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, createProduct,
-		arg.ID,
 		arg.Name,
 		arg.Description,
 		arg.RegularPrice,
@@ -58,7 +56,7 @@ DELETE FROM products
 WHERE id = ?
 `
 
-func (q *Queries) DeleteProduct(ctx context.Context, id string) error {
+func (q *Queries) DeleteProduct(ctx context.Context, id uint32) error {
 	_, err := q.db.ExecContext(ctx, deleteProduct, id)
 	return err
 }
@@ -68,7 +66,7 @@ SELECT id, name, description, regular_price, discounted_price, quantity, categor
 WHERE id = ? LIMIT 1
 `
 
-func (q *Queries) GetProduct(ctx context.Context, id string) (Product, error) {
+func (q *Queries) GetProduct(ctx context.Context, id uint32) (Product, error) {
 	row := q.db.QueryRowContext(ctx, getProduct, id)
 	var i Product
 	err := row.Scan(
@@ -397,8 +395,8 @@ type UpdateProductParams struct {
 	Seasonal        sql.NullBool    `json:"seasonal"`
 	Featured        sql.NullBool    `json:"featured"`
 	ImgUrls         json.RawMessage `json:"img_urls"`
-	UpdatedBy       string          `json:"updated_by"`
-	ID              string          `json:"id"`
+	UpdatedBy       uint32          `json:"updated_by"`
+	ID              uint32          `json:"id"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) error {
@@ -430,7 +428,7 @@ SET rating = (
 WHERE products.id = ?
 `
 
-func (q *Queries) UpdateRating(ctx context.Context, id string) error {
+func (q *Queries) UpdateRating(ctx context.Context, id uint32) error {
 	_, err := q.db.ExecContext(ctx, updateRating, id)
 	return err
 }

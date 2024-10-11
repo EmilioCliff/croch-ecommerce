@@ -20,7 +20,7 @@ INSERT INTO blogs (
 `
 
 type CreateBlogParams struct {
-	Author  string          `json:"author"`
+	Author  uint32          `json:"author"`
 	Title   string          `json:"title"`
 	Content string          `json:"content"`
 	ImgUrls json.RawMessage `json:"img_urls"`
@@ -69,7 +69,7 @@ SELECT id, author, title, content, img_urls, created_at FROM blogs
 WHERE author = ? LIMIT 1
 `
 
-func (q *Queries) GetBlogsByAuthor(ctx context.Context, author string) ([]Blog, error) {
+func (q *Queries) GetBlogsByAuthor(ctx context.Context, author uint32) ([]Blog, error) {
 	rows, err := q.db.QueryContext(ctx, getBlogsByAuthor, author)
 	if err != nil {
 		return nil, err

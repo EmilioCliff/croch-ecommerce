@@ -12,6 +12,8 @@ sql:
         overrides:
           - db_type: "int"
             go_type: "uint32"
+          - db_type: "timestamp"
+            go_type: "time.Time"
           - column: "products.regular_price"
             go_type: "float64"
           - column: "products.discounted_price"

@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
-	"github.com/google/uuid"
 )
 
 type Blog struct {
 	ID      uint32          `json:"id"`
-	Author  uuid.UUID       `json:"author"`
+	Author  uint32          `json:"author"`
 	Title   string          `json:"title"`
 	Content string          `json:"content"`
 	ImgUrls json.RawMessage `json:"img_urls"`
@@ -31,7 +30,7 @@ func (p *Blog) UnmarshalOptions() ([]string, error) {
 }
 
 func (p *Blog) Validate() error {
-	if p.Author == uuid.Nil {
+	if p.Author <= 0 {
 		return pkg.Errorf(pkg.INVALID_ERROR, "author is required")
 	}
 
@@ -56,7 +55,7 @@ type UpdateBlog struct {
 type BlogRepository interface {
 	CreateBlog(ctx context.Context, blog *Blog) (*Blog, error)
 	GetBlog(ctx context.Context, id uint32) (*Blog, error)
-	GetBlogsByAuthor(ctx context.Context, author uuid.UUID) ([]*Blog, error)
+	GetBlogsByAuthor(ctx context.Context, author uint32) ([]*Blog, error)
 	ListBlogs(ctx context.Context) ([]*Blog, error)
 	UpdateBlog(ctx context.Context, blog *UpdateBlog) error
 	DeleteBlog(ctx context.Context, id uint32) error
