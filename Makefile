@@ -1,4 +1,7 @@
 sqlc:
 	cd backend/.envs/configs && sqlc generate
 
-.PHONY: sqlc
+start:
+	docker compose up
+
+.PHONY: sqlc start

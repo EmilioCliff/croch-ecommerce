@@ -1,0 +1,853 @@
+{
+	"info": {
+		"_postman_id": "3edf4401-57f0-4ab9-8327-503f779977c9",
+		"name": "Crochet E-commerce",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30814635"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"clifftest33@gmail.com\",\n    \"password\": \"secret\",\n    \"role\": \"USER\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/register",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"emiliocliff@gmail.com\",\n    \"password\": \"secret\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/login",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/2",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/3/refresh-token",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"3",
+								"refresh-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"emiliocliff@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/reset-password",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Subscription",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subscription\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/10/update-subscription",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"10",
+								"update-subscription"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Elegant Shawl\",\n    \"description\": \"A soft and cozy hand-crocheted shawl, perfect for chilly evenings.\",\n    \"regular_price\": 45.99,\n    \"discounted_price\": 39.99,\n    \"quantity\": 5,\n    \"category_id\": 2,\n    \"size_option\": [\"S\", \"M\", \"L\"],\n    \"color_option\": [\"Red\", \"Blue\", \"Green\"],\n    \"seasonal\": false,\n    \"featured\": true,\n    \"img_urls\": [\"./img/elegant-shawl.jpg\", \"./img/elegant-shawl-back.jpg\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/products/create-product",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"create-product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/products/?type=discounted",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								""
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "discounted"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/products/6",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Elegant Shawl\",\n    \"description\": \"An updated description for the elegant shawl.\",\n    \"regular_price\": 50.99,\n    \"discounted_price\": 0.00,\n    \"quantity\": 0,\n    \"category_id\": 3,\n    \"size_option\": [\"BIG\"],\n    \"color_option\": [\"Black\", \"White\"],\n    \"seasonal\": false,\n    \"featured\": false,\n    \"img_urls\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/products/11",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/products/11",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Product Reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/products/7/reviews",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"7",
+								"reviews"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product Quantity",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/products/5/stock",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"5",
+								"stock"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "List Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/categories/",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"categories",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Category",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"appliances\",\n    \"description\": \"kitchen studd nigga\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/categories/create-category",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"categories",
+								"create-category"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/categories/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"categories",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"appliances change\",\n    \"description\": \"updated description\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/categories/10",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"categories",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/categories/10",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"categories",
+								"10"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reviews",
+			"item": [
+				{
+					"name": "Create Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"author_id\": 4,\n    \"product_id\": 5,\n    \"review\": \"this was a great product\",\n    \"rating\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/products/5/reviews",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"products",
+								"5",
+								"reviews"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Review",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/reviews/1",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"reviews",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Review",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/reviews/4",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"reviews",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/reviews/",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"reviews",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blogs",
+			"item": [
+				{
+					"name": "Create Blog",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Top 10 Crochet Patterns for Fall\",\n    \"content\": \"Fall is the perfect season to cozy up with a crochet project. From scarves to blankets, these top 10 crochet patterns are not only fun but also fashionable. Get ready to create something warm and stylish for the upcoming chilly days.\",\n    \"img_urls\": [\"https://example.com/images/fall-crochet.jpg\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/4/blogs",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"4",
+								"blogs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Blog",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/1/blogs/5",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"blogs",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Blog",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/1/blogs/5",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"blogs",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Blog",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"The Benefits of Crochet for Mental Health\",\n    \"content\": \"Did you know that crocheting can improve your mental well-being? Studies show that it helps reduce stress, anxiety, and even depression. In this article, we explore the mental health benefits of crochet and why it's the perfect hobby to pick up in today's fast-paced world.\",\n    \"img_urls\": [\"https://example.com/images/choose-yarn.jpg\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/1/blogs/5",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"blogs",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Blog",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/blogs/",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"blogs",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Admins Blogs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/1/blogs",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"blogs"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Carts",
+			"item": [
+				{
+					"name": "Create Cart",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"product_id\": 5,\n        \"quantity\": 1\n    },\n    {\n        \"product_id\": 9,\n        \"quantity\": 20\n    },\n    {\n        \"product_id\": 7,\n        \"quantity\": 3\n    },\n    {\n        \"product_id\": 8,\n        \"quantity\": 5\n    }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/1/cart",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cart",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n    {\n        \"product_id\": 9,\n        \"quantity\": 200\n    }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3030/users/1/cart",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/3/cart",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"3",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/users/1/cart",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"users",
+								"1",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:3030/carts/",
+							"host": [
+								"localhost"
+							],
+							"port": "3030",
+							"path": [
+								"carts",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3030/health",
+					"host": [
+						"localhost"
+					],
+					"port": "3030",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

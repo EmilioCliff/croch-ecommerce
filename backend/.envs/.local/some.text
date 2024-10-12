@@ -1,3 +1,9 @@
+// using docker
 MIGRATION_PATH=file:///app/internal/mysql/migrations
 CONFIG_PATH=/app/.envs/.local/
 DB_DSN=myuser:mypassword@tcp(mysql:3306)/mydatabase?multiStatements=true&parseTime=true
+
+// not using docker
+MIGRATION_PATH=file://../../internal/mysql/migrations
+CONFIG_PATH=../../.envs/.local/
+DB_DSN=myuser:mypassword@tcp(localhost:3306)/mydatabase?multiStatements=true&parseTime=true
