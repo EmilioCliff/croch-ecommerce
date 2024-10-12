@@ -72,6 +72,50 @@ func (q *Queries) ListCart(ctx context.Context) ([]Cart, error) {
 	return items, nil
 }
 
+const listCartByUser = `-- name: ListCartByUser :many
+SELECT 
+  user_id,
+  GROUP_CONCAT(
+    CONCAT('Product ID: ', product_id, ', Quantity: ', quantity, ', Created At: ', created_at) 
+    ORDER BY created_at DESC
+    SEPARATOR ' | '
+  ) AS cart_items
+FROM 
+  cart
+GROUP BY 
+  user_id
+ORDER BY 
+  MAX(created_at) DESC
+`
+
+type ListCartByUserRow struct {
+	UserID    uint32         `json:"user_id"`
+	CartItems sql.NullString `json:"cart_items"`
+}
+
+func (q *Queries) ListCartByUser(ctx context.Context) ([]ListCartByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCartByUser)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCartByUserRow
+	for rows.Next() {
+		var i ListCartByUserRow
+		if err := rows.Scan(&i.UserID, &i.CartItems); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOldCarts = `-- name: ListOldCarts :many
 SELECT user_id, product_id, quantity, created_at FROM cart
 WHERE created_at = ? > date_sub(now(), interval 2 week)

@@ -6,6 +6,10 @@ WHERE id = ? LIMIT 1;
 SELECT * FROM users
 WHERE email = ? LIMIT 1;
 
+-- name: GetUserEmail :one
+SELECT email FROM users
+WHERE id = ? LIMIT 1;
+
 -- name: GetSubscribedUsers :many
 SELECT * FROM users
 WHERE subscription = true

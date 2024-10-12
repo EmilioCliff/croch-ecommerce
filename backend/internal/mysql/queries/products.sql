@@ -31,6 +31,10 @@ ORDER BY name;
 SELECT * FROM products
 WHERE id = ? LIMIT 1;
 
+-- name: GetProductName :one
+SELECT name FROM products
+WHERE id = ? LIMIT 1;
+
 -- name: CreateProduct :execresult
 INSERT INTO products (
   name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, seasonal, featured, img_urls, updated_by
@@ -58,6 +62,11 @@ UPDATE products
   updated_by = sqlc.arg('updated_by'),
   updated_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id');
+
+-- name: UpdateProductQuantity :exec
+UPDATE products
+  SET quantity = quantity + ?
+WHERE id = ?;
 
 -- name: UpdateRating :exec
 UPDATE products

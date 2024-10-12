@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql"
@@ -58,16 +59,64 @@ func NewHttpServer(maker pkg.Maker, config pkg.Config) *HttpServer {
 
 func (s *HttpServer) setRoutes() {
 	users := s.router.Group("/users")
+	products := s.router.Group("/products")
+	cart := s.router.Group("/categories")
+	reviews := s.router.Group("/reviews")
+	blogs := s.router.Group("/blogs")
+	carts := s.router.Group("/carts")
 
 	s.router.GET("/health", s.healthCheckHandler)
 
+	// users routes
 	users.GET("/", s.listUsers)
 	users.POST("/register", s.createUser)
 	users.GET("/:id", s.getUser)
 	users.POST("/login", s.loginUser)
 	users.GET("/:id/refresh-token", s.refreshToken)
 	users.POST("/reset-password", s.resetPassword)
-	users.POST("/:id/update-subscription", s.updateUserSubscription)
+	users.PUT("/:id/update-subscription", s.updateUserSubscription)
+
+	users.GET("/:id/reviews", s.ListUsersReviews)
+
+	users.POST("/:id/blogs", s.createBlog)
+	users.GET("/:id/blogs", s.getBlogsByAuthor)
+	users.GET("/:id/blogs/:blogId", s.getBlog)
+	users.DELETE("/:id/blogs/:blogId", s.deleteBlog)
+	users.PUT("/:id/blogs/:blogId", s.updateBlog)
+
+	users.GET("/:id/cart", s.getCart)
+	users.PUT("/:id/cart", s.updateCart)
+	users.POST("/:id/cart", s.createCart)
+	users.DELETE("/:id/cart", s.deleteCart)
+
+	// product routes
+	products.GET("/", s.listProducts) // use query params
+	products.POST("/create-product", s.createProduct)
+	products.GET("/:id", s.getProduct)
+	products.PUT("/:id", s.updateProduct)
+	products.PUT("/:id/stock", s.updateProductQuantity)
+	products.DELETE("/:id", s.deleteProduct)
+
+	products.POST("/:id/reviews", s.createReview)
+	products.GET("/:id/reviews", s.listProductsReviews)
+
+	// categories routes
+	cart.GET("/", s.listCategories)
+	cart.POST("/create-category", s.createCategory)
+	cart.GET("/:id", s.getCategory)
+	cart.PUT("/:id", s.updateCategory)
+	cart.DELETE("/:id", s.deleteCategory)
+
+	// reviews routes
+	reviews.GET("/", s.listReviews)
+	reviews.GET("/:id", s.getReview)
+	reviews.DELETE("/:id", s.deleteReview)
+
+	// blogs route
+	blogs.GET("/", s.listBlogs)
+
+	// carts route
+	carts.GET("/", s.listCarts)
 }
 
 func (s *HttpServer) healthCheckHandler(c *gin.Context) {
@@ -113,13 +162,6 @@ func (s *HttpServer) SetDependencies(store *mysql.Store) {
 	}
 }
 
-func errorResponse(err error) gin.H {
-	return gin.H{
-		"status_code": pkg.ErrorCode(err),
-		"message":     pkg.ErrorMessage(err),
-	}
-}
-
 func (s *HttpServer) Port() int {
 	if s.ln == nil {
 		return 0
@@ -128,4 +170,24 @@ func (s *HttpServer) Port() int {
 	port, _ := s.ln.Addr().(*net.TCPAddr)
 
 	return port.Port
+}
+
+func errorResponse(err error) gin.H {
+	return gin.H{
+		"status_code": pkg.ErrorCode(err),
+		"message":     pkg.ErrorMessage(err),
+	}
+}
+
+func getParam(key string) (uint32, error) {
+	intId, err := strconv.Atoi(key)
+	if err != nil {
+		return 0, pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
+	}
+
+	if intId <= 0 {
+		return 0, pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
+	}
+
+	return uint32(intId), nil
 }

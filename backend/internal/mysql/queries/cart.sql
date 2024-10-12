@@ -17,6 +17,21 @@ ORDER BY created_at ASC;
 SELECT * FROM cart
 ORDER BY created_at DESC;
 
+-- name: ListCartByUser :many
+SELECT 
+  user_id,
+  GROUP_CONCAT(
+    CONCAT('Product ID: ', product_id, ', Quantity: ', quantity, ', Created At: ', created_at) 
+    ORDER BY created_at DESC
+    SEPARATOR ' | '
+  ) AS cart_items
+FROM 
+  cart
+GROUP BY 
+  user_id
+ORDER BY 
+  MAX(created_at) DESC;
+
 -- name: CreateCart :execresult
 INSERT INTO cart (
   user_id, product_id, quantity

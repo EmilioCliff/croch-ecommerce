@@ -149,6 +149,19 @@ func (u *UserRepository) GetSubscribedUsers(ctx context.Context) ([]*repository.
 	return result, nil
 }
 
+func (u *UserRepository) GetUserEmail(ctx context.Context, id uint32) (string, error) {
+	email, err := u.queries.GetUserEmail(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", pkg.Errorf(pkg.NOT_FOUND_ERROR, "no user found with id %d", id)
+		}
+
+		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %v", err)
+	}
+
+	return email, nil
+}
+
 func (u *UserRepository) ListUsers(ctx context.Context) ([]*repository.User, error) {
 	users, err := u.queries.ListUsers(ctx)
 	if err != nil {

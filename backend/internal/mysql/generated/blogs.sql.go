@@ -66,7 +66,7 @@ func (q *Queries) GetBlog(ctx context.Context, id uint32) (Blog, error) {
 
 const getBlogsByAuthor = `-- name: GetBlogsByAuthor :many
 SELECT id, author, title, content, img_urls, created_at FROM blogs
-WHERE author = ? LIMIT 1
+WHERE author = ?
 `
 
 func (q *Queries) GetBlogsByAuthor(ctx context.Context, author uint32) ([]Blog, error) {
@@ -136,7 +136,7 @@ func (q *Queries) ListBlogs(ctx context.Context) ([]Blog, error) {
 
 const updateBlog = `-- name: UpdateBlog :exec
 UPDATE blogs
-  set title = coalesce(?, name),
+  set title = coalesce(?, title),
   content = coalesce(?, content),
   img_urls = coalesce(?, img_urls)
 WHERE id = ?

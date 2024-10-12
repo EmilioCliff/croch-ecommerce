@@ -3,6 +3,9 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql/generated"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
@@ -42,8 +45,8 @@ func (c *CartRepository) CreateCart(ctx context.Context, cart *repository.Cart) 
 	return cart, nil
 }
 
-func (c *CartRepository) ListCarts(ctx context.Context) ([]*repository.Cart, error) {
-	carts, err := c.queries.ListCart(ctx)
+func (c *CartRepository) ListCarts(ctx context.Context) ([]*repository.UserCart, error) {
+	carts, err := c.queries.ListCartByUser(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no cart available")
@@ -52,14 +55,44 @@ func (c *CartRepository) ListCarts(ctx context.Context) ([]*repository.Cart, err
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to list cart: %v", err)
 	}
 
-	var result []*repository.Cart
+	var result []*repository.UserCart
+
+	// Iterate through each user's cart data
 	for _, cart := range carts {
-		result = append(result, &repository.Cart{
-			UserID:    cart.UserID,
-			ProductID: cart.ProductID,
-			Quantity:  cart.Quantity,
-			CreatedAt: cart.CreatedAt,
-		})
+		if cart.CartItems.Valid {
+			// Split concatenated cart items string by the separator " | "
+			cartItems := strings.Split(cart.CartItems.String, " | ")
+
+			var userProducts []*repository.Cart
+
+			for _, item := range cartItems {
+				parts := strings.Split(item, ", ")
+
+				// Assuming parts[0], parts[1], parts[2] contain Product ID, Quantity, and Created At respectively
+				if len(parts) == 3 {
+					productIDStr := strings.TrimPrefix(parts[0], "Product ID: ")
+					quantityStr := strings.TrimPrefix(parts[1], "Quantity: ")
+					createdAtStr := strings.TrimPrefix(parts[2], "Created At: ")
+
+					productID, _ := strconv.ParseUint(productIDStr, 10, 32)
+					quantity, _ := strconv.ParseUint(quantityStr, 10, 32)
+					createdAt, _ := time.Parse("2006-01-02 15:04:05", createdAtStr)
+
+					userProducts = append(userProducts, &repository.Cart{
+						UserID:    cart.UserID,
+						ProductID: uint32(productID),
+						Quantity:  uint32(quantity),
+						CreatedAt: createdAt,
+					})
+				}
+			}
+
+			// Append user and their cart products to the result
+			result = append(result, &repository.UserCart{
+				UserID:   cart.UserID,
+				Products: userProducts,
+			})
+		}
 	}
 
 	return result, nil

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
@@ -53,19 +54,15 @@ func (s *HttpServer) createUser(ctx *gin.Context) {
 	})
 }
 
-type getUserRequest struct {
-	ID uint32 `binding:"required" uri:"id"`
-}
-
 func (s *HttpServer) getUser(ctx *gin.Context) {
-	var uri getUserRequest
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
 		return
 	}
 
-	user, err := s.repo.u.GetUserById(ctx, uri.ID)
+	user, err := s.repo.u.GetUserById(ctx, id)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -132,19 +129,15 @@ func (s *HttpServer) loginUser(ctx *gin.Context) {
 	})
 }
 
-type refreshTokenRequest struct {
-	ID uint32 `binding:"required" uri:"id"`
-}
-
 func (s *HttpServer) refreshToken(ctx *gin.Context) {
-	var uri refreshTokenRequest
-	if err := ctx.ShouldBindUri(&uri); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
 		return
 	}
 
-	user, err := s.repo.u.GetUserById(ctx, uri.ID)
+	user, err := s.repo.u.GetUserById(ctx, id)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -217,34 +210,38 @@ func (s *HttpServer) listUsers(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-type updateUserSubscriptionRequestUri struct {
-	ID uint32 `binding:"required" uri:"id"`
-}
-
 type updateUserSubscriptionRequestBody struct {
 	Subscription bool `binding:"required" json:"subscription"`
 }
 
 func (s *HttpServer) updateUserSubscription(ctx *gin.Context) {
-	var uri updateUserSubscriptionRequestUri
-	if err := ctx.ShouldBindUri(&uri); err != nil {
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	// method put
+	body, err := ctx.GetRawData()
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
 	var req updateUserSubscriptionRequestBody
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	if err := json.Unmarshal(body, &req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	if err := s.repo.u.UpdateUserSubscriptionStatus(ctx, uri.ID, req.Subscription); err != nil {
+	if err := s.repo.u.UpdateUserSubscriptionStatus(ctx, id, req.Subscription); err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"success": "OK"})
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }

@@ -29,6 +29,17 @@ func (p *Blog) UnmarshalOptions() ([]string, error) {
 	return imgUrls, nil
 }
 
+func (p *Blog) MarshalOptions(imgUrls []string) error {
+	imgUrlsData, err := json.Marshal(imgUrls)
+	if err != nil {
+		return fmt.Errorf("failed to marshal img_urls: %w", err)
+	}
+
+	p.ImgUrls = json.RawMessage(imgUrlsData)
+
+	return nil
+}
+
 func (p *Blog) Validate() error {
 	if p.Author <= 0 {
 		return pkg.Errorf(pkg.INVALID_ERROR, "author is required")
@@ -50,6 +61,19 @@ type UpdateBlog struct {
 	Title   *string          `json:"title"`
 	Content *string          `json:"content"`
 	ImgUrls *json.RawMessage `json:"img_urls"`
+}
+
+func (p *UpdateBlog) MarshalOptions(imgUrls []string) error {
+	imgUrlsData, err := json.Marshal(imgUrls)
+	if err != nil {
+		return fmt.Errorf("failed to marshal img_urls: %w", err)
+	}
+
+	urls := json.RawMessage(imgUrlsData)
+
+	p.ImgUrls = &urls
+
+	return nil
 }
 
 type BlogRepository interface {

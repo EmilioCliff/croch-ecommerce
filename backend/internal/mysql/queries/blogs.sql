@@ -4,7 +4,7 @@ WHERE id = ? LIMIT 1;
 
 -- name: GetBlogsByAuthor :many
 SELECT * FROM blogs
-WHERE author = ? LIMIT 1;
+WHERE author = ?;
 
 -- name: ListBlogs :many
 SELECT * FROM blogs
@@ -23,7 +23,7 @@ WHERE id = ?;
 
 -- name: UpdateBlog :exec
 UPDATE blogs
-  set title = coalesce(sqlc.narg('title'), name),
+  set title = coalesce(sqlc.narg('title'), title),
   content = coalesce(sqlc.narg('content'), content),
   img_urls = coalesce(sqlc.narg('img_urls'), img_urls)
 WHERE id = sqlc.arg('id');

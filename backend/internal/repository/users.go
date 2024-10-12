@@ -45,6 +45,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *User) (*User, error)
 	GetUserById(ctx context.Context, id uint32) (*User, error)
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
+	GetUserEmail(ctx context.Context, id uint32) (string, error)
 	GetSubscribedUsers(ctx context.Context) ([]*User, error)
 	ListUsers(ctx context.Context) ([]*User, error)
 	UpdateUserCredentials(ctx context.Context, id uint32, password string) error

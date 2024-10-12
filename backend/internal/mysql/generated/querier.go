@@ -33,13 +33,16 @@ type Querier interface {
 	GetOrder(ctx context.Context, id uint32) (Order, error)
 	GetOrderOrderItems(ctx context.Context, orderID uint32) ([]OrderItem, error)
 	GetProduct(ctx context.Context, id uint32) (Product, error)
+	GetProductName(ctx context.Context, id uint32) (string, error)
 	GetProductOrderItems(ctx context.Context, productID uint32) ([]OrderItem, error)
 	GetReview(ctx context.Context, id uint32) (Review, error)
 	GetSubscribedUsers(ctx context.Context) ([]User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserById(ctx context.Context, id uint32) (User, error)
+	GetUserEmail(ctx context.Context, id uint32) (string, error)
 	ListBlogs(ctx context.Context) ([]Blog, error)
 	ListCart(ctx context.Context) ([]Cart, error)
+	ListCartByUser(ctx context.Context) ([]ListCartByUserRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListDiscountedProducts(ctx context.Context) ([]Product, error)
 	ListFeaturedProducts(ctx context.Context) ([]Product, error)
@@ -62,6 +65,7 @@ type Querier interface {
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) error
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) error
+	UpdateProductQuantity(ctx context.Context, arg UpdateProductQuantityParams) error
 	UpdateRating(ctx context.Context, id uint32) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) error
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error

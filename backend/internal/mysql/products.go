@@ -71,6 +71,19 @@ func (p *ProductRepository) GetProduct(ctx context.Context, id uint32) (*reposit
 	return toRepositoryProduct(product), nil
 }
 
+func (p *ProductRepository) GetProductName(ctx context.Context, id uint32) (string, error) {
+	email, err := p.queries.GetProductName(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", pkg.Errorf(pkg.NOT_FOUND_ERROR, "product not found")
+		}
+
+		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get product: %v", err)
+	}
+
+	return email, nil
+}
+
 func (p *ProductRepository) UpdateProduct(ctx context.Context, product *repository.UpdateProduct) error {
 	if err := product.Validate(); err != nil {
 		return pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
@@ -79,6 +92,7 @@ func (p *ProductRepository) UpdateProduct(ctx context.Context, product *reposito
 	var req generated.UpdateProductParams
 
 	req.ID = product.ID
+	req.UpdatedBy = product.UpdatedBy
 
 	if product.Name != nil {
 		req.Name = sql.NullString{
@@ -149,6 +163,19 @@ func (p *ProductRepository) UpdateProduct(ctx context.Context, product *reposito
 	err := p.queries.UpdateProduct(ctx, req)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update product: %v", err)
+	}
+
+	return nil
+}
+
+func (p *ProductRepository) UpdateProductQuantity(ctx context.Context, id uint32, quantity uint32) error {
+	err := p.queries.UpdateProductQuantity(ctx, generated.UpdateProductQuantityParams{
+		ID:       id,
+		Quantity: quantity,
+	})
+
+	if err != nil {
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update product quantity: %v", err)
 	}
 
 	return nil

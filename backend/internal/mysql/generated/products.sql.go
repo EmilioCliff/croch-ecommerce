@@ -90,6 +90,18 @@ func (q *Queries) GetProduct(ctx context.Context, id uint32) (Product, error) {
 	return i, err
 }
 
+const getProductName = `-- name: GetProductName :one
+SELECT name FROM products
+WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetProductName(ctx context.Context, id uint32) (string, error) {
+	row := q.db.QueryRowContext(ctx, getProductName, id)
+	var name string
+	err := row.Scan(&name)
+	return name, err
+}
+
 const listDiscountedProducts = `-- name: ListDiscountedProducts :many
 SELECT id, name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, rating, seasonal, featured, img_urls, updated_by, updated_at, created_at FROM products
 WHERE discounted_price > 0
@@ -415,6 +427,22 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) er
 		arg.UpdatedBy,
 		arg.ID,
 	)
+	return err
+}
+
+const updateProductQuantity = `-- name: UpdateProductQuantity :exec
+UPDATE products
+  SET quantity = quantity + ?
+WHERE id = ?
+`
+
+type UpdateProductQuantityParams struct {
+	Quantity uint32 `json:"quantity"`
+	ID       uint32 `json:"id"`
+}
+
+func (q *Queries) UpdateProductQuantity(ctx context.Context, arg UpdateProductQuantityParams) error {
+	_, err := q.db.ExecContext(ctx, updateProductQuantity, arg.Quantity, arg.ID)
 	return err
 }
 
