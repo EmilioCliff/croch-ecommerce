@@ -58,59 +58,70 @@ func NewHttpServer(maker pkg.Maker, config pkg.Config) *HttpServer {
 }
 
 func (s *HttpServer) setRoutes() {
+	// routes groups
 	users := s.router.Group("/users")
+	usersAuth := s.router.Group("/users").Use(authMiddleware(s.tokenMaker))
+
 	products := s.router.Group("/products")
+	productsAuth := s.router.Group("/products").Use(authMiddleware(s.tokenMaker))
+
 	cart := s.router.Group("/categories")
+	cartAuth := s.router.Group("/categories").Use(authMiddleware(s.tokenMaker))
+
 	reviews := s.router.Group("/reviews")
+	reviewsAuth := s.router.Group("/reviews").Use(authMiddleware(s.tokenMaker))
+
 	blogs := s.router.Group("/blogs")
+	// blogsAuth := blogs.Use(authMiddleware(s.tokenMaker))
 	carts := s.router.Group("/carts")
+	// cartsAuth := carts.Use(authMiddleware(s.tokenMaker))
 
 	s.router.GET("/health", s.healthCheckHandler)
 
 	// users routes
-	users.GET("/", s.listUsers)
+	usersAuth.GET("/", s.listUsers)
 	users.POST("/register", s.createUser)
-	users.GET("/:id", s.getUser)
+	usersAuth.GET("/:id", s.getUser)
 	users.POST("/login", s.loginUser)
-	users.GET("/:id/refresh-token", s.refreshToken)
+	usersAuth.GET("/:id/refresh-token", s.refreshToken)
 	users.POST("/reset-password", s.resetPassword)
-	users.PUT("/:id/update-subscription", s.updateUserSubscription)
+	usersAuth.PUT("/:id/update-subscription", s.updateUserSubscription)
 
-	users.GET("/:id/reviews", s.ListUsersReviews)
+	usersAuth.GET("/:id/reviews", s.listUsersReviews)
 
-	users.POST("/:id/blogs", s.createBlog)
+	usersAuth.POST("/:id/blogs", s.createBlog)
 	users.GET("/:id/blogs", s.getBlogsByAuthor)
 	users.GET("/:id/blogs/:blogId", s.getBlog)
-	users.DELETE("/:id/blogs/:blogId", s.deleteBlog)
-	users.PUT("/:id/blogs/:blogId", s.updateBlog)
+	usersAuth.DELETE("/:id/blogs/:blogId", s.deleteBlog)
+	usersAuth.PUT("/:id/blogs/:blogId", s.updateBlog)
 
-	users.GET("/:id/cart", s.getCart)
-	users.PUT("/:id/cart", s.updateCart)
-	users.POST("/:id/cart", s.createCart)
-	users.DELETE("/:id/cart", s.deleteCart)
+	usersAuth.GET("/:id/cart", s.getCart)
+	usersAuth.PUT("/:id/cart", s.updateCart)
+	usersAuth.POST("/:id/cart", s.createCart)
+	usersAuth.DELETE("/:id/cart", s.deleteCart)
 
 	// product routes
 	products.GET("/", s.listProducts) // use query params
-	products.POST("/create-product", s.createProduct)
+	productsAuth.POST("/create-product", s.createProduct)
 	products.GET("/:id", s.getProduct)
-	products.PUT("/:id", s.updateProduct)
-	products.PUT("/:id/stock", s.updateProductQuantity)
-	products.DELETE("/:id", s.deleteProduct)
+	productsAuth.PUT("/:id", s.updateProduct)
+	productsAuth.PUT("/:id/stock", s.updateProductQuantity)
+	productsAuth.DELETE("/:id", s.deleteProduct)
 
-	products.POST("/:id/reviews", s.createReview)
+	productsAuth.POST("/:id/reviews", s.createReview)
 	products.GET("/:id/reviews", s.listProductsReviews)
 
 	// categories routes
 	cart.GET("/", s.listCategories)
-	cart.POST("/create-category", s.createCategory)
+	cartAuth.POST("/create-category", s.createCategory)
 	cart.GET("/:id", s.getCategory)
-	cart.PUT("/:id", s.updateCategory)
-	cart.DELETE("/:id", s.deleteCategory)
+	cartAuth.PUT("/:id", s.updateCategory)
+	cartAuth.DELETE("/:id", s.deleteCategory)
 
 	// reviews routes
 	reviews.GET("/", s.listReviews)
 	reviews.GET("/:id", s.getReview)
-	reviews.DELETE("/:id", s.deleteReview)
+	reviewsAuth.DELETE("/:id", s.deleteReview)
 
 	// blogs route
 	blogs.GET("/", s.listBlogs)
@@ -190,4 +201,18 @@ func getParam(key string) (uint32, error) {
 	}
 
 	return uint32(intId), nil
+}
+
+func getPayload(ctx *gin.Context) (*pkg.Payload, error) {
+	payload, exists := ctx.Get(authorizationPayloadKey)
+	if !exists {
+		return &pkg.Payload{}, pkg.Errorf(pkg.INVALID_ERROR, "authorization payload not found")
+	}
+
+	p, ok := payload.(*pkg.Payload)
+	if !ok {
+		return &pkg.Payload{}, pkg.Errorf(pkg.INVALID_ERROR, "authorization payload not found")
+	}
+
+	return p, nil
 }

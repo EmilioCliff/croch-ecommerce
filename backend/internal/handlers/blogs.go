@@ -16,8 +16,25 @@ type createBlogRequest struct {
 }
 
 func (s *HttpServer) createBlog(ctx *gin.Context) {
-	// get user id from token
-	var id uint32 = 3
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if id != payload.UserID {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "user id does not match")))
+
+		return
+	}
 
 	var req createBlogRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -27,12 +44,12 @@ func (s *HttpServer) createBlog(ctx *gin.Context) {
 	}
 
 	data := &repository.Blog{
-		Author:  id,
+		Author:  payload.UserID,
 		Title:   req.Title,
 		Content: req.Content,
 	}
 
-	err := data.MarshalOptions(req.ImgUrls)
+	err = data.MarshalOptions(req.ImgUrls)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 

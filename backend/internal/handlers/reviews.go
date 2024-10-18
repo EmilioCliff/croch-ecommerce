@@ -98,7 +98,7 @@ func (s *HttpServer) listProductsReviews(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (s *HttpServer) ListUsersReviews(ctx *gin.Context) {
+func (s *HttpServer) listUsersReviews(ctx *gin.Context) {
 	id, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

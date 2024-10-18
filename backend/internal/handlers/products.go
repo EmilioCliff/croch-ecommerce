@@ -43,8 +43,12 @@ func (s *HttpServer) createProduct(ctx *gin.Context) {
 		req.ImgUrls = []string{}
 	}
 
-	// get id from token payload to add to updated_by field
-	var id uint32 = 1
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
 
 	reqProduct := &repository.Product{
 		Name:            req.Name,
@@ -55,7 +59,7 @@ func (s *HttpServer) createProduct(ctx *gin.Context) {
 		CategoryID:      req.CategoryID,
 		Seasonal:        req.Seasonal,
 		Featured:        req.Featured,
-		UpdatedBy:       id,
+		UpdatedBy:       payload.UserID,
 	}
 	if err := reqProduct.MarshalOptions(req.SizeOption, req.ColorOption, req.ImgUrls); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -88,11 +92,15 @@ func (s *HttpServer) updateProduct(ctx *gin.Context) {
 		return
 	}
 
-	// get id from token payload to add to updated_by field
-	var userId uint32 = 3
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
 
 	reqProduct := &repository.UpdateProduct{
-		UpdatedBy:       userId,
+		UpdatedBy:       payload.UserID,
 		ID:              productId,
 		Name:            pkg.StringPtr(req.Name),
 		Description:     pkg.StringPtr(req.Description),

@@ -35,8 +35,12 @@ type createCart struct {
 // }
 
 func (s *HttpServer) createCart(ctx *gin.Context) {
-	// get id from token
-	var userId uint32 = 1
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
 
 	var req []createCart
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -50,7 +54,7 @@ func (s *HttpServer) createCart(ctx *gin.Context) {
 	// create cart
 	for _, product := range req {
 		cart, err := s.repo.cart.CreateCart(ctx, &repository.Cart{
-			UserID:    userId,
+			UserID:    payload.UserID,
 			ProductID: product.ProductID,
 			Quantity:  product.Quantity,
 		})
@@ -70,14 +74,18 @@ func (s *HttpServer) createCart(ctx *gin.Context) {
 		return
 	}
 
-	rsp.ID = userId
+	rsp.ID = payload.UserID
 
 	ctx.JSON(http.StatusOK, rsp)
 }
 
 func (s *HttpServer) updateCart(ctx *gin.Context) {
-	// get id from token
-	var userId uint32 = 3
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
 
 	body, err := ctx.GetRawData()
 	if err != nil {
@@ -95,7 +103,7 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 
 	// create cart
 	for _, product := range req {
-		err := s.repo.cart.UpdateCart(ctx, product.Quantity, userId, product.ProductID)
+		err := s.repo.cart.UpdateCart(ctx, product.Quantity, payload.UserID, product.ProductID)
 		if err != nil {
 			ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -103,7 +111,7 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 		}
 	}
 
-	carts, err := s.repo.cart.ListUserCarts(ctx, userId)
+	carts, err := s.repo.cart.ListUserCarts(ctx, payload.UserID)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -117,7 +125,7 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 		return
 	}
 
-	rsp.ID = userId
+	rsp.ID = payload.UserID
 
 	ctx.JSON(http.StatusOK, rsp)
 }
@@ -148,10 +156,14 @@ func (s *HttpServer) listCarts(ctx *gin.Context) {
 }
 
 func (s *HttpServer) getCart(ctx *gin.Context) {
-	// get id from token
-	var userId uint32 = 3
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
-	carts, err := s.repo.cart.ListUserCarts(ctx, userId)
+		return
+	}
+
+	carts, err := s.repo.cart.ListUserCarts(ctx, payload.UserID)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -165,15 +177,20 @@ func (s *HttpServer) getCart(ctx *gin.Context) {
 		return
 	}
 
-	rsp.ID = userId
+	rsp.ID = payload.UserID
 
 	ctx.JSON(http.StatusOK, rsp)
 }
 
 func (s *HttpServer) deleteCart(ctx *gin.Context) {
-	var userId uint32 = 3
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
-	err := s.repo.cart.DeleteCart(ctx, userId)
+		return
+	}
+
+	err = s.repo.cart.DeleteCart(ctx, payload.UserID)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
