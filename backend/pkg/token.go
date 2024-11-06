@@ -12,7 +12,7 @@ import (
 var ErrTokenExpired = errors.New("Token has expired")
 
 type Maker interface {
-	CreateToken(userID uint32, email string, duration time.Duration) (string, error)
+	CreateToken(userID uint32, email string, role string, duration time.Duration) (string, error)
 	VerifyToken(token string) (*Payload, error)
 }
 
@@ -36,8 +36,8 @@ func NewPaseto(symmetricKey string) (*PasetoMaker, error) {
 	return maker, nil
 }
 
-func (maker *PasetoMaker) CreateToken(userID uint32, email string, duration time.Duration) (string, error) {
-	payload, err := NewPayload(userID, email, duration)
+func (maker *PasetoMaker) CreateToken(userID uint32, email string, role string, duration time.Duration) (string, error) {
+	payload, err := NewPayload(userID, email, role, duration)
 	if err != nil {
 		return "", err
 	}
@@ -48,13 +48,11 @@ func (maker *PasetoMaker) CreateToken(userID uint32, email string, duration time
 func (maker *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 	payload := &Payload{}
 
-	err := maker.paseto.Decrypt(token, maker.symmetricKey, payload, nil)
-	if err != nil {
+	if err := maker.paseto.Decrypt(token, maker.symmetricKey, payload, nil); err != nil {
 		return nil, err
 	}
 
-	err = payload.Valid()
-	if err != nil {
+	if err := payload.Valid(); err != nil {
 		return nil, err
 	}
 

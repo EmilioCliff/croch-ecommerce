@@ -6,10 +6,30 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "github.com/EmilioCliff/crocheted-ecommerce/backend/docs/statik"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/handlers"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/mysql"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
 )
+
+// @title           Crocheted Ecommerce API
+// @version         1.0
+// @description     This is a sample server for the ecommerce website.
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Mozilla Public License Version 2.0
+// @license.url   https://www.mozilla.org/en-US/MPL/2.0/
+
+// @host      localhost:3030
+// @BasePath  /api/v1
+
+// @securityDefinitions.basic  BearerToken
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 
 func main() {
 	config, err := pkg.LoadConfig("../../.envs/.local/")

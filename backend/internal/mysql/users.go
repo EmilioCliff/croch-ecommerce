@@ -27,12 +27,12 @@ func NewUserRepository(db *Store) *UserRepository {
 }
 
 func (u *UserRepository) CreateUser(ctx context.Context, user *repository.User) (*repository.User, error) {
-	accessToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, u.db.config.TOKEN_DURATION)
+	accessToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, user.Role, u.db.config.TOKEN_DURATION)
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create token: %v", err)
 	}
 
-	refreshToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, u.db.config.REFRESH_TOKEN_DURATION)
+	refreshToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, user.Role, u.db.config.REFRESH_TOKEN_DURATION)
 	if err != nil {
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create token: %v", err)
 	}
@@ -226,6 +226,26 @@ func (u *UserRepository) UpdateUserSubscriptionStatus(ctx context.Context, id ui
 	return err
 }
 
+func (u *UserRepository) UpdateUserRole(ctx context.Context, adminId uint32, userId uint32, role string) error {
+	if role != "ADMIN" && role != "USER" {
+		return pkg.Errorf(pkg.INVALID_ERROR, "invalid user role")
+	}
+
+	// Role      string        `json:"role"`
+	// UpdatedBy sql.NullInt32 `json:"updated_by"`
+	// ID        uint32        `json:"id"`
+	err := u.queries.UpdateUserRole(ctx, generated.UpdateUserRoleParams{
+		Role: role,
+		UpdatedBy: sql.NullInt32{
+			Valid: true,
+			Int32: int32(adminId),
+		},
+		ID: userId,
+	})
+
+	return err
+}
+
 func (u *UserRepository) UpdateRefreshToken(ctx context.Context, id uint32) (string, error) {
 	user, err := u.queries.GetUserById(ctx, id)
 	if err != nil {
@@ -236,7 +256,7 @@ func (u *UserRepository) UpdateRefreshToken(ctx context.Context, id uint32) (str
 		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get user: %v", err)
 	}
 
-	refreshToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, u.db.config.REFRESH_TOKEN_DURATION)
+	refreshToken, err := u.db.tokenMaker.CreateToken(user.ID, user.Email, user.Role, u.db.config.REFRESH_TOKEN_DURATION)
 	if err != nil {
 		return "", pkg.Errorf(pkg.INTERNAL_ERROR, "failed to create token: %v", err)
 	}

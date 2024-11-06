@@ -36,6 +36,13 @@ UPDATE users
   updated_by = ?
 WHERE id = ?;
 
+-- name: UpdateUserRole :exec
+UPDATE users
+  set role = ?,
+  updated_at = CURRENT_TIMESTAMP,
+  updated_by = ?
+WHERE id = ?;
+
 -- name: UpdateSubscriptionStatus :exec
 UPDATE users
   set subscription = ?,

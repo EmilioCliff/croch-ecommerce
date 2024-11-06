@@ -102,6 +102,18 @@ func (q *Queries) GetProductName(ctx context.Context, id uint32) (string, error)
 	return name, err
 }
 
+const getProductQuantity = `-- name: GetProductQuantity :one
+SELECT quantity FROM products
+WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetProductQuantity(ctx context.Context, id uint32) (uint32, error) {
+	row := q.db.QueryRowContext(ctx, getProductQuantity, id)
+	var quantity uint32
+	err := row.Scan(&quantity)
+	return quantity, err
+}
+
 const listDiscountedProducts = `-- name: ListDiscountedProducts :many
 SELECT id, name, description, regular_price, discounted_price, quantity, category_id, size_option, color_option, rating, seasonal, featured, img_urls, updated_by, updated_at, created_at FROM products
 WHERE discounted_price > 0
@@ -390,7 +402,7 @@ UPDATE products
   seasonal =  coalesce(?, seasonal),
   featured =  coalesce(?, featured),
   img_urls =  coalesce(?, img_urls),
-  updated_by = ?,
+  updated_by = coalesce(?, updated_by),
   updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
 `

@@ -43,13 +43,27 @@ func (o *Order) Validate() error {
 	return nil
 }
 
+type UpdateOrder struct {
+	ID        uint32  `json:"id"`
+	Status    string  `json:"status"`
+	UpdatedBy *uint32 `json:"updated_by"`
+}
+
+func (u *UpdateOrder) Validate() error {
+	if u.Status != "PROCESSING" && u.Status != "SHIPPED" && u.Status != "DELIVERED" {
+		return pkg.Errorf(pkg.INVALID_ERROR, "invalid order status")
+	}
+
+	return nil
+}
+
 type OrderItem struct {
 	OrderID   uint32  `json:"order_id"`
 	ProductID uint32  `json:"product_id"`
 	Quantity  uint32  `json:"quantity"`
 	Price     float64 `json:"price"`
-	Color     string  `json:"color"`
-	Size      string  `json:"size"`
+	Color     *string `json:"color"`
+	Size      *string `json:"size"`
 }
 
 func (o *OrderItem) Validate() error {
@@ -74,18 +88,18 @@ func (o *OrderItem) Validate() error {
 
 type OrderRepository interface {
 	// Order CRUD
-	CreateOrder(ctx context.Context, order *Order) (*Order, error)
+	CreateOrder(ctx context.Context, order *Order, orderItems []*OrderItem) (*Order, error)
 	ListOrders(ctx context.Context) ([]*Order, error)
 	GetOrder(ctx context.Context, id uint32) (*Order, error)
 	ListOrderWithStatus(ctx context.Context, status string) ([]*Order, error)
 	ListUserOrders(ctx context.Context, userID uint32) ([]*Order, error)
-	UpdateOrder(ctx context.Context, order *Order) error
+	UpdateOrder(ctx context.Context, order *UpdateOrder) error
 	DeleteOrder(ctx context.Context, id uint32) error
 
 	// OrderItem CRUD
-	CreateOrderItem(ctx context.Context, orderItem *OrderItem) (*OrderItem, error)
+	CreateOrderItem(ctx context.Context, orderItem *OrderItem) error
 	ListOrderOrderItems(ctx context.Context, orderID uint32) ([]*OrderItem, error)
 	ListProductOrderItems(ctx context.Context, productID uint32) ([]*OrderItem, error)
 	ListOrderItems(ctx context.Context) ([]*OrderItem, error)
-	DeleteOrderItem(ctx context.Context, orderID uint32, productID uint32) error
+	DeleteOrderOrderItems(ctx context.Context, orderID uint32, productID uint32) error
 }

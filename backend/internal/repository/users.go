@@ -50,6 +50,7 @@ type UserRepository interface {
 	ListUsers(ctx context.Context) ([]*User, error)
 	UpdateUserCredentials(ctx context.Context, id uint32, password string) error
 	UpdateUserSubscriptionStatus(ctx context.Context, id uint32, status bool) error
+	UpdateUserRole(ctx context.Context, adminId uint32, userId uint32, role string) error
 	UpdateRefreshToken(ctx context.Context, id uint32) (string, error)
 	DeleteUser(ctx context.Context, id uint32) error
 }

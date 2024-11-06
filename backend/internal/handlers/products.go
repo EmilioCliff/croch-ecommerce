@@ -24,6 +24,19 @@ type createProductRequest struct {
 }
 
 func (s *HttpServer) createProduct(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	var req createProductRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -41,13 +54,6 @@ func (s *HttpServer) createProduct(ctx *gin.Context) {
 
 	if req.ImgUrls == nil {
 		req.ImgUrls = []string{}
-	}
-
-	payload, err := getPayload(ctx)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
 	}
 
 	reqProduct := &repository.Product{
@@ -78,6 +84,19 @@ func (s *HttpServer) createProduct(ctx *gin.Context) {
 }
 
 func (s *HttpServer) updateProduct(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	var req createProductRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -86,13 +105,6 @@ func (s *HttpServer) updateProduct(ctx *gin.Context) {
 	}
 
 	productId, err := getParam(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-
-		return
-	}
-
-	payload, err := getPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
@@ -133,6 +145,19 @@ type updateProductQuantityRequest struct {
 }
 
 func (s *HttpServer) updateProductQuantity(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	body, err := ctx.GetRawData()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -186,6 +211,7 @@ func (s *HttpServer) listProducts(ctx *gin.Context) {
 	productType := ctx.Query("type")
 
 	var result []*repository.Product
+
 	var err error
 
 	switch productType {
@@ -211,6 +237,19 @@ func (s *HttpServer) listProducts(ctx *gin.Context) {
 }
 
 func (s *HttpServer) deleteProduct(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	id, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

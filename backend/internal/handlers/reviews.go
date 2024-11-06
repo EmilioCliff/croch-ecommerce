@@ -149,6 +149,19 @@ func (s *HttpServer) getReview(ctx *gin.Context) {
 }
 
 func (s *HttpServer) deleteReview(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	id, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

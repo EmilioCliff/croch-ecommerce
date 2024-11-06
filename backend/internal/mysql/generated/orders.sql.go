@@ -187,15 +187,15 @@ func (q *Queries) ListUserOrders(ctx context.Context, userID uint32) ([]Order, e
 const updateOrderStatus = `-- name: UpdateOrderStatus :exec
 UPDATE orders
   set status = ?,
-  updated_by = ?,
+  updated_by = coalesce(?, updated_by),
   updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
 `
 
 type UpdateOrderStatusParams struct {
-	Status    string `json:"status"`
-	UpdatedBy uint32 `json:"updated_by"`
-	ID        uint32 `json:"id"`
+	Status    string        `json:"status"`
+	UpdatedBy sql.NullInt32 `json:"updated_by"`
+	ID        uint32        `json:"id"`
 }
 
 func (q *Queries) UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error {

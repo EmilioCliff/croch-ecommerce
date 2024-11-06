@@ -17,9 +17,8 @@ type userResponse struct {
 }
 
 type createUserRequest struct {
-	Email    string `binding:"required"                  json:"email"`
-	Password string `binding:"required"                  json:"password"`
-	Role     string `binding:"required,oneof=USER ADMIN" json:"role"`
+	Email    string `binding:"required" json:"email"`
+	Password string `binding:"required" json:"password"`
 }
 
 type createUserResponse struct {
@@ -39,7 +38,7 @@ func (s *HttpServer) createUser(ctx *gin.Context) {
 	user, err := s.repo.u.CreateUser(ctx, &repository.User{
 		Email:    req.Email,
 		Password: req.Password,
-		Role:     req.Role,
+		Role:     "USER",
 	})
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
@@ -52,6 +51,54 @@ func (s *HttpServer) createUser(ctx *gin.Context) {
 		AccessToken:             user.RefreshToken,
 		AccessTokenExpiresAfter: int64(s.config.TOKEN_DURATION.Seconds()),
 	})
+}
+
+type updateUserRoleRequest struct {
+	Role string `binding:"required,oneof=USER ADMIN" json:"role"`
+}
+
+func (s *HttpServer) updateUserRole(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
+	userId, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	body, err := ctx.GetRawData()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
+
+		return
+	}
+
+	var req updateUserRoleRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
+
+		return
+	}
+
+	if err := s.repo.u.UpdateUserRole(ctx, payload.UserID, userId, req.Role); err != nil {
+		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
+
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
 func (s *HttpServer) getUser(ctx *gin.Context) {
@@ -111,9 +158,14 @@ func (s *HttpServer) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	// add new refresh token in the db
+	refreshToken, err := s.repo.u.UpdateRefreshToken(ctx, user.ID)
+	if err != nil {
+		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
-	accesstoken, err := s.tokenMaker.CreateToken(user.ID, user.Email, s.config.TOKEN_DURATION)
+		return
+	}
+
+	accesstoken, err := s.tokenMaker.CreateToken(user.ID, user.Email, user.Role, s.config.TOKEN_DURATION)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 
@@ -123,7 +175,7 @@ func (s *HttpServer) loginUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, loginUserResponse{
 		ID:                       user.ID,
 		AccessToken:              accesstoken,
-		RefreshToken:             user.RefreshToken,
+		RefreshToken:             refreshToken,
 		AccessTokenExpiresAfter:  int64(s.config.TOKEN_DURATION.Seconds()),
 		RefreshTokenExpiresAfter: int64(s.config.REFRESH_TOKEN_DURATION.Seconds()),
 	})
@@ -145,21 +197,15 @@ func (s *HttpServer) refreshToken(ctx *gin.Context) {
 	}
 
 	// check if the refresh token has expired
-
-	// if expired ask user to login so as to create a new refresh token
-
-	// if not expired, create new access token
-
-	accesstoken, err := s.tokenMaker.CreateToken(user.ID, user.Email, s.config.TOKEN_DURATION)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	if _, err := s.tokenMaker.VerifyToken(user.RefreshToken); err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "refresh token expired, kindly login")))
 
 		return
 	}
 
-	refreshToken, err := s.repo.u.UpdateRefreshToken(ctx, user.ID)
+	accesstoken, err := s.tokenMaker.CreateToken(user.ID, user.Email, user.Role, s.config.TOKEN_DURATION)
 	if err != nil {
-		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 
 		return
 	}
@@ -167,7 +213,7 @@ func (s *HttpServer) refreshToken(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, loginUserResponse{
 		ID:                       user.ID,
 		AccessToken:              accesstoken,
-		RefreshToken:             refreshToken,
+		RefreshToken:             user.RefreshToken,
 		AccessTokenExpiresAfter:  int64(s.config.TOKEN_DURATION.Seconds()),
 		RefreshTokenExpiresAfter: int64(s.config.REFRESH_TOKEN_DURATION.Seconds()),
 	})
@@ -186,10 +232,24 @@ func (s *HttpServer) resetPassword(ctx *gin.Context) {
 	}
 
 	// send password reset email
+	// email will have a token that will enable one to send the data
 	ctx.JSON(http.StatusNotImplemented, gin.H{})
 }
 
 func (s *HttpServer) listUsers(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	users, err := s.repo.u.ListUsers(ctx)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
@@ -197,7 +257,7 @@ func (s *HttpServer) listUsers(ctx *gin.Context) {
 		return
 	}
 
-	var response []userResponse
+	response := []userResponse{}
 	for _, user := range users {
 		response = append(response, userResponse{
 			ID:           user.ID,

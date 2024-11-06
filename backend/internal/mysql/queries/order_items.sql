@@ -14,7 +14,7 @@ ORDER BY order_id;
 INSERT INTO order_items (
   product_id, order_id, quantity, price, color, size
 ) VALUES (
-  ?, ?, ?, ?, ?, ?
+  sqlc.arg("product_id"), sqlc.arg("order_id"), sqlc.arg("quantity"), sqlc.arg("price"), sqlc.narg("color"), sqlc.narg("size")
 );
 
 -- name: DeleteOrderOrderItems :exec

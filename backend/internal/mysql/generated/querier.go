@@ -35,6 +35,7 @@ type Querier interface {
 	GetProduct(ctx context.Context, id uint32) (Product, error)
 	GetProductName(ctx context.Context, id uint32) (string, error)
 	GetProductOrderItems(ctx context.Context, productID uint32) ([]OrderItem, error)
+	GetProductQuantity(ctx context.Context, id uint32) (uint32, error)
 	GetReview(ctx context.Context, id uint32) (Review, error)
 	GetSubscribedUsers(ctx context.Context) ([]User, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -71,6 +72,7 @@ type Querier interface {
 	UpdateSubscriptionStatus(ctx context.Context, arg UpdateSubscriptionStatusParams) error
 	UpdateUserCart(ctx context.Context, arg UpdateUserCartParams) error
 	UpdateUserCredentials(ctx context.Context, arg UpdateUserCredentialsParams) error
+	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
 }
 
 var _ Querier = (*Queries)(nil)

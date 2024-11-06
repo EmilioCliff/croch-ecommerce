@@ -15,6 +15,19 @@ type createCategoryRequest struct {
 }
 
 func (s *HttpServer) createCategory(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	var req createCategoryRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -65,6 +78,19 @@ func (s *HttpServer) getCategory(ctx *gin.Context) {
 }
 
 func (s *HttpServer) updateCategory(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	body, err := ctx.GetRawData()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -101,6 +127,19 @@ func (s *HttpServer) updateCategory(ctx *gin.Context) {
 }
 
 func (s *HttpServer) deleteCategory(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	id, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

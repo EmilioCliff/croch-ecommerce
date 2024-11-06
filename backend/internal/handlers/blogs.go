@@ -23,6 +23,12 @@ func (s *HttpServer) createBlog(ctx *gin.Context) {
 		return
 	}
 
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	id, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -96,6 +102,19 @@ func (s *HttpServer) getBlog(ctx *gin.Context) {
 }
 
 func (s *HttpServer) updateBlog(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	body, err := ctx.GetRawData()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -113,6 +132,19 @@ func (s *HttpServer) updateBlog(ctx *gin.Context) {
 	id, err := getParam(ctx.Param("blogId"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	blog, err := s.repo.b.GetBlog(ctx, id)
+	if err != nil {
+		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
+
+		return
+	}
+
+	if blog.Author != payload.UserID {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "unauthorized to change another user blog")))
 
 		return
 	}
@@ -167,6 +199,32 @@ func (s *HttpServer) deleteBlog(ctx *gin.Context) {
 	id, err := getParam(ctx.Param("blogId"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
+	blog, err := s.repo.b.GetBlog(ctx, id)
+	if err != nil {
+		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
+
+		return
+	}
+
+	if blog.Author != payload.UserID {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "unauthorized to delete another user blog")))
 
 		return
 	}

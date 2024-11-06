@@ -12,6 +12,7 @@ import (
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/internal/repository"
 	"github.com/EmilioCliff/crocheted-ecommerce/backend/pkg"
 	"github.com/gin-gonic/gin"
+	"github.com/rakyll/statik/fs"
 )
 
 const (
@@ -58,23 +59,35 @@ func NewHttpServer(maker pkg.Maker, config pkg.Config) *HttpServer {
 }
 
 func (s *HttpServer) setRoutes() {
+	// version
+	v1 := s.router.Group("/api/v1")
+
+	// statik files
+	statikFs, err := fs.New()
+	if err != nil {
+		log.Fatal("cannot create statik fs")
+	}
+
+	v1.StaticFS("/swagger", statikFs)
+
 	// routes groups
-	users := s.router.Group("/users")
-	usersAuth := s.router.Group("/users").Use(authMiddleware(s.tokenMaker))
+	users := v1.Group("/users")
+	usersAuth := v1.Group("/users").Use(authMiddleware(s.tokenMaker))
 
-	products := s.router.Group("/products")
-	productsAuth := s.router.Group("/products").Use(authMiddleware(s.tokenMaker))
+	products := v1.Group("/products")
+	productsAuth := v1.Group("/products").Use(authMiddleware(s.tokenMaker))
 
-	cart := s.router.Group("/categories")
-	cartAuth := s.router.Group("/categories").Use(authMiddleware(s.tokenMaker))
+	cart := v1.Group("/categories")
+	cartAuth := v1.Group("/categories").Use(authMiddleware(s.tokenMaker))
 
-	reviews := s.router.Group("/reviews")
-	reviewsAuth := s.router.Group("/reviews").Use(authMiddleware(s.tokenMaker))
+	reviews := v1.Group("/reviews")
+	reviewsAuth := v1.Group("/reviews").Use(authMiddleware(s.tokenMaker))
 
-	blogs := s.router.Group("/blogs")
-	// blogsAuth := blogs.Use(authMiddleware(s.tokenMaker))
-	carts := s.router.Group("/carts")
-	// cartsAuth := carts.Use(authMiddleware(s.tokenMaker))
+	ordersAuth := v1.Group("/orders").Use(authMiddleware(s.tokenMaker))
+
+	blogs := v1.Group("/blogs")
+
+	carts := v1.Group("/carts")
 
 	s.router.GET("/health", s.healthCheckHandler)
 
@@ -83,9 +96,10 @@ func (s *HttpServer) setRoutes() {
 	users.POST("/register", s.createUser)
 	usersAuth.GET("/:id", s.getUser)
 	users.POST("/login", s.loginUser)
-	usersAuth.GET("/:id/refresh-token", s.refreshToken)
+	users.GET("/:id/refresh-token", s.refreshToken)
 	users.POST("/reset-password", s.resetPassword)
 	usersAuth.PUT("/:id/update-subscription", s.updateUserSubscription)
+	usersAuth.PUT("/:id/update-role", s.updateUserRole)
 
 	usersAuth.GET("/:id/reviews", s.listUsersReviews)
 
@@ -99,6 +113,9 @@ func (s *HttpServer) setRoutes() {
 	usersAuth.PUT("/:id/cart", s.updateCart)
 	usersAuth.POST("/:id/cart", s.createCart)
 	usersAuth.DELETE("/:id/cart", s.deleteCart)
+
+	usersAuth.GET("/:id/orders", s.listUserOrders)
+	usersAuth.POST("/:id/orders", s.createOrder)
 
 	// product routes
 	products.GET("/", s.listProducts) // use query params
@@ -128,6 +145,13 @@ func (s *HttpServer) setRoutes() {
 
 	// carts route
 	carts.GET("/", s.listCarts)
+
+	// orders
+	ordersAuth.GET("/", s.listOrders)
+	ordersAuth.GET("/:id", s.getOrder)
+	ordersAuth.GET("/status", s.listOrderWithStatus)
+	ordersAuth.PUT("/:id", s.updateOrderStatus)
+	ordersAuth.DELETE("/:id", s.deleteOrder)
 }
 
 func (s *HttpServer) healthCheckHandler(c *gin.Context) {
@@ -211,8 +235,16 @@ func getPayload(ctx *gin.Context) (*pkg.Payload, error) {
 
 	p, ok := payload.(*pkg.Payload)
 	if !ok {
-		return &pkg.Payload{}, pkg.Errorf(pkg.INVALID_ERROR, "authorization payload not found")
+		return &pkg.Payload{}, pkg.Errorf(pkg.INVALID_ERROR, "authorization payload invalid")
 	}
 
 	return p, nil
+}
+
+func isAdmin(payload *pkg.Payload) (bool, error) {
+	if payload.Role != "ADMIN" {
+		return false, pkg.Errorf(pkg.INVALID_ERROR, "not enough role to perform this action")
+	}
+
+	return true, nil
 }

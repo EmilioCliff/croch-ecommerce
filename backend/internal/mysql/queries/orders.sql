@@ -29,7 +29,7 @@ WHERE id = ?;
 
 -- name: UpdateOrderStatus :exec
 UPDATE orders
-  set status = ?,
-  updated_by = ?,
+  set status = sqlc.arg("status"),
+  updated_by = coalesce(sqlc.narg("updated_by"), updated_by),
   updated_at = CURRENT_TIMESTAMP
-WHERE id = ?;
+WHERE id = sqlc.arg("id");

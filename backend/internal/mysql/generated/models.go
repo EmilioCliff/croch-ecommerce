@@ -86,6 +86,20 @@ type Review struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Transaction struct {
+	ID      uint32 `json:"id"`
+	UserID  uint32 `json:"user_id"`
+	OrderID uint32 `json:"order_id"`
+	// MPESA or STRIPE
+	PaymentMethod     string          `json:"payment_method"`
+	Amount            string          `json:"amount"`
+	Status            bool            `json:"status"`
+	PaymentDetails    json.RawMessage `json:"payment_details"`
+	ResultDescription string          `json:"result_description"`
+	UpdatedAt         time.Time       `json:"updated_at"`
+	CreatedAt         time.Time       `json:"created_at"`
+}
+
 type User struct {
 	ID       uint32 `json:"id"`
 	Email    string `json:"email"`

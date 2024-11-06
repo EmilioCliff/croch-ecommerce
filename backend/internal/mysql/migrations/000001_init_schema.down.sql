@@ -1,15 +1,15 @@
-ALTER TABLE users DROP FOREIGN KEY updated_by;
-ALTER TABLE products DROP FOREIGN KEY category_id;
-ALTER TABLE products DROP FOREIGN KEY updated_by;
-ALTER TABLE reviews DROP FOREIGN KEY user_id;
-ALTER TABLE reviews DROP FOREIGN KEY product_id;
-ALTER TABLE cart DROP FOREIGN KEY user_id;
-ALTER TABLE cart DROP FOREIGN KEY product_id;
-ALTER TABLE orders DROP FOREIGN KEY user_id;
-ALTER TABLE orders DROP FOREIGN KEY updated_by;
-ALTER TABLE order_items DROP FOREIGN KEY order_id;
-ALTER TABLE order_items DROP FOREIGN KEY product_id;
-ALTER TABLE blogs DROP FOREIGN KEY author;
+ALTER TABLE users DROP FOREIGN KEY fk_users_updated_by;
+ALTER TABLE products DROP FOREIGN KEY fk_products_category_id;
+ALTER TABLE products DROP FOREIGN KEY fk_products_updated_by;
+ALTER TABLE reviews DROP FOREIGN KEY fk_reviews_user_id;
+ALTER TABLE reviews DROP FOREIGN KEY fk_reviews_product_id;
+ALTER TABLE cart DROP FOREIGN KEY fk_cart_user_id;
+ALTER TABLE cart DROP FOREIGN KEY fk_cart_product_id;
+ALTER TABLE orders DROP FOREIGN KEY fk_orders_user_id;
+ALTER TABLE orders DROP FOREIGN KEY fk_orders_updated_by;
+ALTER TABLE order_items DROP FOREIGN KEY fk_order_items_order_id;
+ALTER TABLE order_items DROP FOREIGN KEY fk_order_items_product_id;
+ALTER TABLE blogs DROP FOREIGN KEY fk_blogs_author;
 
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS categories;

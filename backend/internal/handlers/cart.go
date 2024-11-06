@@ -26,13 +26,8 @@ type productInCart struct {
 }
 
 type createCart struct {
-	ProductID uint32 `json:"product_id"`
-	Quantity  uint32 `json:"quantity"`
+	Data map[int32]int32 `binding:"required" json:"data"` // {1: 32, 3: 40, 5: 10}
 }
-
-// type createCartRequest struct {
-// 	Products []createCart `json:"products"`
-// }
 
 func (s *HttpServer) createCart(ctx *gin.Context) {
 	payload, err := getPayload(ctx)
@@ -42,21 +37,21 @@ func (s *HttpServer) createCart(ctx *gin.Context) {
 		return
 	}
 
-	var req []createCart
+	var req createCart
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	var data []*repository.Cart
+	data := []*repository.Cart{}
 
 	// create cart
-	for _, product := range req {
+	for productId, quantity := range req.Data {
 		cart, err := s.repo.cart.CreateCart(ctx, &repository.Cart{
 			UserID:    payload.UserID,
-			ProductID: product.ProductID,
-			Quantity:  product.Quantity,
+			ProductID: uint32(productId),
+			Quantity:  uint32(quantity),
 		})
 		if err != nil {
 			ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
@@ -94,16 +89,16 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 		return
 	}
 
-	var req []createCart
+	var req createCart
 	if err := json.Unmarshal(body, &req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}
 
-	// create cart
-	for _, product := range req {
-		err := s.repo.cart.UpdateCart(ctx, product.Quantity, payload.UserID, product.ProductID)
+	// update cart
+	for productId, quantity := range req.Data {
+		err := s.repo.cart.UpdateCart(ctx, uint32(quantity), payload.UserID, uint32(productId))
 		if err != nil {
 			ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -138,7 +133,7 @@ func (s *HttpServer) listCarts(ctx *gin.Context) {
 		return
 	}
 
-	var listRsps []cartResponse
+	listRsps := []cartResponse{}
 
 	for _, cart := range usersCart {
 		rsp, err := s.structureCart(ctx, cart.Products)

@@ -100,15 +100,28 @@ CREATE INDEX orders_index_8 ON orders (user_id);
 CREATE INDEX orders_index_9 ON orders (status);
 
 -- Foreign Keys
-ALTER TABLE users ADD FOREIGN KEY (updated_by) REFERENCES users (id);
-ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories (id);
-ALTER TABLE products ADD FOREIGN KEY (updated_by) REFERENCES users (id);
-ALTER TABLE reviews ADD FOREIGN KEY (user_id) REFERENCES users (id);
-ALTER TABLE reviews ADD FOREIGN KEY (product_id) REFERENCES products (id);
-ALTER TABLE cart ADD FOREIGN KEY (user_id) REFERENCES users (id);
-ALTER TABLE cart ADD FOREIGN KEY (product_id) REFERENCES products (id);
-ALTER TABLE orders ADD FOREIGN KEY (user_id) REFERENCES users (id);
-ALTER TABLE orders ADD FOREIGN KEY (updated_by) REFERENCES users (id);
-ALTER TABLE order_items ADD FOREIGN KEY (order_id) REFERENCES orders (id);
-ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products (id);
-ALTER TABLE blogs ADD FOREIGN KEY (author) REFERENCES users (id);
+-- ALTER TABLE users ADD FOREIGN KEY (updated_by) REFERENCES users (id);
+-- ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories (id);
+-- ALTER TABLE products ADD FOREIGN KEY (updated_by) REFERENCES users (id);
+-- ALTER TABLE reviews ADD FOREIGN KEY (user_id) REFERENCES users (id);
+-- ALTER TABLE reviews ADD FOREIGN KEY (product_id) REFERENCES products (id);
+-- ALTER TABLE cart ADD FOREIGN KEY (user_id) REFERENCES users (id);
+-- ALTER TABLE cart ADD FOREIGN KEY (product_id) REFERENCES products (id);
+-- ALTER TABLE orders ADD FOREIGN KEY (user_id) REFERENCES users (id);
+-- ALTER TABLE orders ADD FOREIGN KEY (updated_by) REFERENCES users (id);
+-- ALTER TABLE order_items ADD FOREIGN KEY (order_id) REFERENCES orders (id);
+-- ALTER TABLE order_items ADD FOREIGN KEY (product_id) REFERENCES products (id);
+-- ALTER TABLE blogs ADD FOREIGN KEY (author) REFERENCES users (id);
+
+ALTER TABLE users ADD CONSTRAINT fk_users_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE products ADD CONSTRAINT fk_products_category_id FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE;
+ALTER TABLE products ADD CONSTRAINT fk_products_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE reviews ADD CONSTRAINT fk_reviews_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE reviews ADD CONSTRAINT fk_reviews_product_id FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE;
+ALTER TABLE cart ADD CONSTRAINT fk_cart_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE cart ADD CONSTRAINT fk_cart_product_id FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE;
+ALTER TABLE orders ADD CONSTRAINT fk_orders_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE orders ADD CONSTRAINT fk_orders_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE CASCADE;
+ALTER TABLE order_items ADD CONSTRAINT fk_order_items_order_id FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE;
+ALTER TABLE order_items ADD CONSTRAINT fk_order_items_product_id FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE;
+ALTER TABLE blogs ADD CONSTRAINT fk_blogs_author FOREIGN KEY (author) REFERENCES users (id) ON DELETE CASCADE
