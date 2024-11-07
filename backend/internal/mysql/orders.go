@@ -25,11 +25,7 @@ func NewOrderRepository(db *Store) *OrderRepository {
 	}
 }
 
-// [{product_id: 1, quantity: 2, price: 300, color: red, size: 32}, {product_id: 1, quantity: 2, price: 300, color: red, size: 32}]
-
 func (o *OrderRepository) CreateOrder(ctx context.Context, order *repository.Order, orderItems []*repository.OrderItem) (*repository.Order, error) {
-	var result *repository.Order
-
 	err := o.db.execTx(ctx, func(q *generated.Queries) error {
 		// create order
 		result, err := o.queries.CreateOrder(ctx, generated.CreateOrderParams{
@@ -92,10 +88,13 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *repository.Ord
 			return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete users cart: %v", err)
 		}
 
+		order.ID = uint32(id)
+		order.Status = "PENDING"
+
 		return nil
 	})
 
-	return result, err
+	return order, err
 }
 
 func (o *OrderRepository) ListOrders(ctx context.Context) ([]*repository.Order, error) {

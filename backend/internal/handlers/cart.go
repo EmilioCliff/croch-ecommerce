@@ -25,14 +25,36 @@ type productInCart struct {
 	DiscountedPrice float64  `json:"discounted_price"`
 }
 
+// type createCart struct {
+// 	Data map[uint32]uint32 `binding:"required" json:"data"` // {1: 32, 3: 40, 5: 10}
+// }
+
+type cartRequest struct {
+	ProductID uint32 `binding:"required" json:"product_id"`
+	Quantity  uint32 `binding:"required" json:"quantity"`
+}
+
 type createCart struct {
-	Data map[int32]int32 `binding:"required" json:"data"` // {1: 32, 3: 40, 5: 10}
+	Data []cartRequest `binding:"required" json:"data"`
 }
 
 func (s *HttpServer) createCart(ctx *gin.Context) {
 	payload, err := getPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if id != payload.UserID {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "cannot create anothet users cart")))
 
 		return
 	}
@@ -47,11 +69,11 @@ func (s *HttpServer) createCart(ctx *gin.Context) {
 	data := []*repository.Cart{}
 
 	// create cart
-	for productId, quantity := range req.Data {
+	for _, cart := range req.Data {
 		cart, err := s.repo.cart.CreateCart(ctx, &repository.Cart{
 			UserID:    payload.UserID,
-			ProductID: uint32(productId),
-			Quantity:  uint32(quantity),
+			ProductID: cart.ProductID,
+			Quantity:  cart.Quantity,
 		})
 		if err != nil {
 			ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
@@ -82,6 +104,19 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 		return
 	}
 
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if id != payload.UserID {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "cannot create anothet users cart")))
+
+		return
+	}
+
 	body, err := ctx.GetRawData()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -97,8 +132,8 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 	}
 
 	// update cart
-	for productId, quantity := range req.Data {
-		err := s.repo.cart.UpdateCart(ctx, uint32(quantity), payload.UserID, uint32(productId))
+	for _, cart := range req.Data {
+		err := s.repo.cart.UpdateCart(ctx, cart.Quantity, payload.UserID, cart.ProductID)
 		if err != nil {
 			ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -126,6 +161,19 @@ func (s *HttpServer) updateCart(ctx *gin.Context) {
 }
 
 func (s *HttpServer) listCarts(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+
+		return
+	}
+
 	usersCart, err := s.repo.cart.ListCarts(ctx)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
@@ -158,7 +206,20 @@ func (s *HttpServer) getCart(ctx *gin.Context) {
 		return
 	}
 
-	carts, err := s.repo.cart.ListUserCarts(ctx, payload.UserID)
+	id, err := getParam(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if id != payload.UserID && payload.Role != "ADMIN" {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "not enough permission to view users cart")))
+
+		return
+	}
+
+	carts, err := s.repo.cart.ListUserCarts(ctx, id)
 	if err != nil {
 		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
 
@@ -172,7 +233,7 @@ func (s *HttpServer) getCart(ctx *gin.Context) {
 		return
 	}
 
-	rsp.ID = payload.UserID
+	rsp.ID = id
 
 	ctx.JSON(http.StatusOK, rsp)
 }
@@ -181,6 +242,12 @@ func (s *HttpServer) deleteCart(ctx *gin.Context) {
 	payload, err := getPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if isAdmin, err := isAdmin(payload); !isAdmin {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 
 		return
 	}

@@ -19,13 +19,19 @@ type reviewResponse struct {
 }
 
 type createReviewRequest struct {
-	AuthorID  uint32 `binding:"required" json:"author_id"`
 	ProductID uint32 `binding:"required" json:"product_id"`
 	Review    string `binding:"required" json:"review"`
 	Rating    uint32 `binding:"required" json:"rating"`
 }
 
 func (s *HttpServer) createReview(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(pkg.PkgErrorToHttpError(err), errorResponse(err))
+
+		return
+	}
+
 	var req createReviewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
@@ -35,7 +41,7 @@ func (s *HttpServer) createReview(ctx *gin.Context) {
 
 	review, err := s.repo.r.CreateReview(ctx, &repository.Review{
 		ProductID: req.ProductID,
-		UserID:    req.AuthorID,
+		UserID:    payload.UserID,
 		Rating:    req.Rating,
 		Review:    req.Review,
 	})

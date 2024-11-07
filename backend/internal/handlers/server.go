@@ -87,7 +87,7 @@ func (s *HttpServer) setRoutes() {
 
 	blogs := v1.Group("/blogs")
 
-	carts := v1.Group("/carts")
+	cartsAuth := v1.Group("/carts").Use(authMiddleware(s.tokenMaker))
 
 	s.router.GET("/health", s.healthCheckHandler)
 
@@ -105,7 +105,6 @@ func (s *HttpServer) setRoutes() {
 
 	usersAuth.POST("/:id/blogs", s.createBlog)
 	users.GET("/:id/blogs", s.getBlogsByAuthor)
-	users.GET("/:id/blogs/:blogId", s.getBlog)
 	usersAuth.DELETE("/:id/blogs/:blogId", s.deleteBlog)
 	usersAuth.PUT("/:id/blogs/:blogId", s.updateBlog)
 
@@ -116,6 +115,7 @@ func (s *HttpServer) setRoutes() {
 
 	usersAuth.GET("/:id/orders", s.listUserOrders)
 	usersAuth.POST("/:id/orders", s.createOrder)
+	usersAuth.GET("/:id/orders/:orderId", s.getOrder)
 
 	// product routes
 	products.GET("/", s.listProducts) // use query params
@@ -142,15 +142,15 @@ func (s *HttpServer) setRoutes() {
 
 	// blogs route
 	blogs.GET("/", s.listBlogs)
+	blogs.GET("/:blogId", s.getBlog)
 
 	// carts route
-	carts.GET("/", s.listCarts)
+	cartsAuth.GET("/", s.listCarts)
 
 	// orders
 	ordersAuth.GET("/", s.listOrders)
-	ordersAuth.GET("/:id", s.getOrder)
 	ordersAuth.GET("/status", s.listOrderWithStatus)
-	ordersAuth.PUT("/:id", s.updateOrderStatus)
+	ordersAuth.PUT("/:id", s.updateOrderStatus) // put
 	ordersAuth.DELETE("/:id", s.deleteOrder)
 }
 
@@ -190,7 +190,7 @@ func (s *HttpServer) SetDependencies(store *mysql.Store) {
 		u:    mysql.NewUserRepository(store),
 		p:    mysql.NewProductRepository(store),
 		cart: mysql.NewCartRepository(store),
-		// o:    mysql.NewOrderRepository(store),
+		o:    mysql.NewOrderRepository(store),
 		cate: mysql.NewCategoryRepository(store),
 		r:    mysql.NewReviewRepository(store),
 		b:    mysql.NewBlogRepository(store),

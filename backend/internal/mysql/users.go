@@ -231,9 +231,6 @@ func (u *UserRepository) UpdateUserRole(ctx context.Context, adminId uint32, use
 		return pkg.Errorf(pkg.INVALID_ERROR, "invalid user role")
 	}
 
-	// Role      string        `json:"role"`
-	// UpdatedBy sql.NullInt32 `json:"updated_by"`
-	// ID        uint32        `json:"id"`
 	err := u.queries.UpdateUserRole(ctx, generated.UpdateUserRoleParams{
 		Role: role,
 		UpdatedBy: sql.NullInt32{

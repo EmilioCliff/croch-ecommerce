@@ -275,9 +275,22 @@ type updateUserSubscriptionRequestBody struct {
 }
 
 func (s *HttpServer) updateUserSubscription(ctx *gin.Context) {
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
 	id, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if id != payload.UserID {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "unauthorized to this action")))
 
 		return
 	}
