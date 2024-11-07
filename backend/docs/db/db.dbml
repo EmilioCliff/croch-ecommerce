@@ -1,0 +1,153 @@
+Table "blogs" {
+  "id" "int unsigned" [pk, not null, increment]
+  "author" "int unsigned" [not null]
+  "title" varchar(255) [not null]
+  "content" text [not null]
+  "img_urls" json [not null]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+}
+
+Table "cart" {
+  "user_id" "int unsigned" [not null]
+  "product_id" "int unsigned" [not null]
+  "quantity" "int unsigned" [not null]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`, note: 'will be used to check how long the cart has stayed']
+}
+
+Table "categories" {
+  "id" "int unsigned" [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "description" text [not null]
+}
+
+Table "order_items" {
+  "order_id" "int unsigned" [not null]
+  "product_id" "int unsigned" [not null]
+  "quantity" "int unsigned" [not null]
+  "price" decimal(10,2) [not null]
+  "color" varchar(255) [not null, default: 'No color']
+  "size" varchar(255) [not null, default: 'No size']
+}
+
+Table "orders" {
+  "id" "int unsigned" [pk, not null, increment]
+  "user_id" "int unsigned" [not null]
+  "amount" decimal(10,2) [not null, note: 'total amount of money for the order']
+  "shipping_amount" decimal(10,2) [not null, note: 'shipping cost']
+  "status" varchar(255) [not null, default: 'PENDING', note: 'PENDING, PROCESSING, SHIPPED or DELIVERED']
+  "shipping_address" text [not null]
+  "updated_by" "int unsigned" [not null]
+  "updated_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    id [type: btree, name: "orders_index_7"]
+    user_id [type: btree, name: "orders_index_8"]
+    status [type: btree, name: "orders_index_9"]
+  }
+}
+
+Table "products" {
+  "id" "int unsigned" [pk, not null, increment]
+  "name" varchar(255) [not null]
+  "description" varchar(255) [not null]
+  "regular_price" decimal(10,2) [not null]
+  "discounted_price" decimal(10,2) [not null, default: 0.00]
+  "quantity" "int unsigned" [not null, default: 0]
+  "category_id" "int unsigned" [not null]
+  "size_option" json [not null]
+  "color_option" json [not null]
+  "rating" float [not null, default: 0, note: 'will be updated anytime a review is added']
+  "seasonal" tinyint(1) [not null, default: 0]
+  "featured" tinyint(1) [not null, default: 0]
+  "img_urls" json [not null]
+  "updated_by" "int unsigned" [not null]
+  "updated_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    id [type: btree, name: "products_index_2"]
+  }
+}
+
+Table "reviews" {
+  "id" "int unsigned" [pk, not null, increment]
+  "user_id" "int unsigned" [not null]
+  "product_id" "int unsigned" [not null]
+  "rating" "int unsigned" [not null]
+  "review" text [not null]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    user_id [type: btree, name: "reviews_index_3"]
+    product_id [type: btree, name: "reviews_index_4"]
+  }
+}
+
+Table "schema_migrations" {
+  "version" bigint [pk, not null]
+  "dirty" tinyint(1) [not null]
+}
+
+Table "transactions" {
+  "id" "int unsigned" [pk, not null, increment]
+  "user_id" "int unsigned" [not null]
+  "order_id" "int unsigned" [not null]
+  "payment_method" varchar(124) [not null, note: 'MPESA or STRIPE']
+  "amount" decimal(10,2) [not null]
+  "status" tinyint(1) [not null, default: 0]
+  "payment_details" json [not null]
+  "result_description" text [not null]
+  "updated_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    id [type: btree, name: "transactions_index_0"]
+    status [type: btree, name: "transactions_index_1"]
+  }
+}
+
+Table "users" {
+  "id" "int unsigned" [pk, not null, increment]
+  "email" varchar(255) [unique, not null]
+  "password" varchar(255) [not null]
+  "subscription" tinyint(1) [not null, default: 0, note: 'subscription to our blog posts']
+  "role" varchar(124) [not null, note: 'USER or ADMIN']
+  "refresh_token" text [not null]
+  "updated_by" "int unsigned"
+  "updated_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+  "created_at" timestamp [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    id [type: btree, name: "users_index_0"]
+    email [type: btree, name: "users_index_1"]
+  }
+}
+
+Ref "fk_blogs_author":"users"."id" < "blogs"."author" [delete: cascade]
+
+Ref "fk_cart_product_id":"products"."id" < "cart"."product_id" [delete: cascade]
+
+Ref "fk_cart_user_id":"users"."id" < "cart"."user_id" [delete: cascade]
+
+Ref "fk_order_items_order_id":"orders"."id" < "order_items"."order_id" [delete: cascade]
+
+Ref "fk_order_items_product_id":"products"."id" < "order_items"."product_id" [delete: cascade]
+
+Ref "fk_orders_updated_by":"users"."id" < "orders"."updated_by" [delete: cascade]
+
+Ref "fk_orders_user_id":"users"."id" < "orders"."user_id" [delete: cascade]
+
+Ref "fk_products_category_id":"categories"."id" < "products"."category_id" [delete: cascade]
+
+Ref "fk_products_updated_by":"users"."id" < "products"."updated_by" [delete: cascade]
+
+Ref "fk_reviews_product_id":"products"."id" < "reviews"."product_id" [delete: cascade]
+
+Ref "fk_reviews_user_id":"users"."id" < "reviews"."user_id" [delete: cascade]
+
+Ref "fk_transactions_order_id":"orders"."id" < "transactions"."order_id" [delete: cascade]
+
+Ref "fk_transactions_user_id":"users"."id" < "transactions"."user_id" [delete: cascade]
+
+Ref "fk_users_updated_by":"users"."id" < "users"."updated_by" [delete: cascade]

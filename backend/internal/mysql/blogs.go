@@ -76,13 +76,13 @@ func (b *BlogRepository) GetBlogsByAuthor(ctx context.Context, author uint32) ([
 	blogs, err := b.queries.GetBlogsByAuthor(ctx, author)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no blog found with author %s", author)
+			return nil, pkg.Errorf(pkg.NOT_FOUND_ERROR, "no blog found with author: %v", author)
 		}
 
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get blogs: %v", err)
 	}
 
-	var result []*repository.Blog
+	result := []*repository.Blog{}
 
 	for _, blog := range blogs {
 		result = append(result, &repository.Blog{
@@ -104,7 +104,7 @@ func (b *BlogRepository) ListBlogs(ctx context.Context) ([]*repository.Blog, err
 		return nil, pkg.Errorf(pkg.INTERNAL_ERROR, "failed to get blogs: %v", err)
 	}
 
-	var result []*repository.Blog
+	result := []*repository.Blog{}
 
 	for _, blog := range blogs {
 		result = append(result, &repository.Blog{

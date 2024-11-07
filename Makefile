@@ -24,4 +24,10 @@ migrateup:
 migratedown:
 	migrate -path ./backend/internal/mysql/migrations -database "$(DB_URL)" -verbose down
 
-.PHONY: sqlc startDocker startServer swag statik createMigrate migrateup migratedown
+test:
+	cd ./backend/ && go test -v ./...
+
+race-test:
+	cd ./backend/ && go test -v -race ./...
+
+.PHONY: sqlc startDocker startServer swag statik createMigrate migrateup migratedown test race-test
