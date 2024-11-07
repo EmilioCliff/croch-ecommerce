@@ -85,6 +85,11 @@ func (p *ProductRepository) GetProductName(ctx context.Context, id uint32) (stri
 }
 
 func (p *ProductRepository) UpdateProduct(ctx context.Context, product *repository.UpdateProduct) error {
+	_, err := p.GetProduct(ctx, product.ID)
+	if err != nil {
+		return err
+	}
+
 	if err := product.Validate(); err != nil {
 		return pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
 	}
@@ -160,7 +165,7 @@ func (p *ProductRepository) UpdateProduct(ctx context.Context, product *reposito
 		req.UpdatedBy = product.UpdatedBy
 	}
 
-	err := p.queries.UpdateProduct(ctx, req)
+	err = p.queries.UpdateProduct(ctx, req)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update product: %v", err)
 	}
@@ -169,7 +174,12 @@ func (p *ProductRepository) UpdateProduct(ctx context.Context, product *reposito
 }
 
 func (p *ProductRepository) UpdateProductQuantity(ctx context.Context, id uint32, quantity uint32) error {
-	err := p.queries.UpdateProductQuantity(ctx, generated.UpdateProductQuantityParams{
+	_, err := p.GetProduct(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	err = p.queries.UpdateProductQuantity(ctx, generated.UpdateProductQuantityParams{
 		ID:       id,
 		Quantity: quantity,
 	})

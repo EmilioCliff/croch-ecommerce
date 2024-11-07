@@ -73,11 +73,6 @@ func (s *Store) migration(driver database.Driver) error {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to load migration: %s", err)
 	}
 
-	// migration, err := migrate.New(s.config.MIGRATION_PATH, s.config.DB_DSN)
-	// if err != nil {
-	// 	return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to load migration: %s", err)
-	// }
-
 	if err := migration.Up(); err != nil && err != migrate.ErrNoChange {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "Failed to run migrate up: %s", err)
 	}

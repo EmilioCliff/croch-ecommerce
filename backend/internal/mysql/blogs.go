@@ -121,6 +121,12 @@ func (b *BlogRepository) ListBlogs(ctx context.Context) ([]*repository.Blog, err
 }
 
 func (b *BlogRepository) UpdateBlog(ctx context.Context, blog *repository.UpdateBlog) error {
+	// check if the blog exists
+	_, err := b.GetBlog(ctx, blog.ID)
+	if err != nil {
+		return err
+	}
+
 	var req generated.UpdateBlogParams
 
 	req.ID = blog.ID
@@ -143,7 +149,7 @@ func (b *BlogRepository) UpdateBlog(ctx context.Context, blog *repository.Update
 		req.ImgUrls = *blog.ImgUrls
 	}
 
-	err := b.queries.UpdateBlog(ctx, req)
+	err = b.queries.UpdateBlog(ctx, req)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to update blog: %v", err)
 	}
@@ -152,7 +158,13 @@ func (b *BlogRepository) UpdateBlog(ctx context.Context, blog *repository.Update
 }
 
 func (b *BlogRepository) DeleteBlog(ctx context.Context, id uint32) error {
-	err := b.queries.DeleteBlog(ctx, id)
+	// check if the blog exists
+	_, err := b.GetBlog(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	err = b.queries.DeleteBlog(ctx, id)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete blog: %v", err)
 	}

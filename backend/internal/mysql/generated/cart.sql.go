@@ -11,6 +11,29 @@ import (
 	"time"
 )
 
+const checkUsersCartExists = `-- name: CheckUsersCartExists :one
+SELECT user_id, product_id, quantity, created_at FROM cart
+WHERE user_id = ? AND product_id = ?
+LIMIT 1
+`
+
+type CheckUsersCartExistsParams struct {
+	UserID    uint32 `json:"user_id"`
+	ProductID uint32 `json:"product_id"`
+}
+
+func (q *Queries) CheckUsersCartExists(ctx context.Context, arg CheckUsersCartExistsParams) (Cart, error) {
+	row := q.db.QueryRowContext(ctx, checkUsersCartExists, arg.UserID, arg.ProductID)
+	var i Cart
+	err := row.Scan(
+		&i.UserID,
+		&i.ProductID,
+		&i.Quantity,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createCart = `-- name: CreateCart :execresult
 INSERT INTO cart (
   user_id, product_id, quantity

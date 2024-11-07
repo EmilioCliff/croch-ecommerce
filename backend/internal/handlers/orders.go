@@ -57,17 +57,29 @@ type orderItemsRequest struct {
 }
 
 func (s *HttpServer) createOrder(ctx *gin.Context) {
-	// create order
-	var req createOrderRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
+	payload, err := getPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 
 		return
 	}
 
-	payload, err := getPayload(ctx)
+	userId, err := getParam(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+
+		return
+	}
+
+	if userId != payload.UserID {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(pkg.Errorf(pkg.AUTHENTICATION_ERROR, "cannot create another user order")))
+
+		return
+	}
+	// create order
+	var req createOrderRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(pkg.Errorf(pkg.INVALID_ERROR, "%v", err)))
 
 		return
 	}

@@ -389,6 +389,22 @@ func (q *Queries) ListSeasonalProducts(ctx context.Context) ([]Product, error) {
 	return items, nil
 }
 
+const reduceProductQuantity = `-- name: ReduceProductQuantity :exec
+UPDATE products
+  SET quantity = quantity - ?
+WHERE id = ?
+`
+
+type ReduceProductQuantityParams struct {
+	Quantity uint32 `json:"quantity"`
+	ID       uint32 `json:"id"`
+}
+
+func (q *Queries) ReduceProductQuantity(ctx context.Context, arg ReduceProductQuantityParams) error {
+	_, err := q.db.ExecContext(ctx, reduceProductQuantity, arg.Quantity, arg.ID)
+	return err
+}
+
 const updateProduct = `-- name: UpdateProduct :exec
 UPDATE products
   set name = coalesce(?, name),

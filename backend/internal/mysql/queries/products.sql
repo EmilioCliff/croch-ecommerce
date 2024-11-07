@@ -72,6 +72,11 @@ UPDATE products
   SET quantity = quantity + ?
 WHERE id = ?;
 
+-- name: ReduceProductQuantity :exec
+UPDATE products
+  SET quantity = quantity - ?
+WHERE id = ?;
+
 -- name: UpdateRating :exec
 UPDATE products
 SET rating = (

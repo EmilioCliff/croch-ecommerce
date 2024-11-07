@@ -84,11 +84,16 @@ func (c *CategoryRepository) ListCategories(ctx context.Context) ([]*repository.
 }
 
 func (c *CategoryRepository) UpdateCategory(ctx context.Context, category *repository.Category) error {
+	_, err := c.GetCategory(ctx, category.ID)
+	if err != nil {
+		return err
+	}
+
 	if err := category.Validate(); err != nil {
 		return pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
 	}
 
-	err := c.queries.UpdateCategory(ctx, generated.UpdateCategoryParams{
+	err = c.queries.UpdateCategory(ctx, generated.UpdateCategoryParams{
 		ID:          category.ID,
 		Name:        category.Name,
 		Description: category.Description,
@@ -101,7 +106,12 @@ func (c *CategoryRepository) UpdateCategory(ctx context.Context, category *repos
 }
 
 func (c *CategoryRepository) DeleteCategory(ctx context.Context, id uint32) error {
-	err := c.queries.DeleteCategory(ctx, id)
+	_, err := c.GetCategory(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	err = c.queries.DeleteCategory(ctx, id)
 	if err != nil {
 		return pkg.Errorf(pkg.INTERNAL_ERROR, "failed to delete category: %v", err)
 	}

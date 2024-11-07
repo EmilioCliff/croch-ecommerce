@@ -66,11 +66,9 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *repository.Ord
 					orderItem.Quantity,
 				)
 			} else {
-				if err := o.queries.UpdateProduct(ctx, generated.UpdateProductParams{
-					Quantity: sql.NullInt32{
-						Valid: true,
-						Int32: int32(currentStock - orderItem.Quantity),
-					},
+				if err := o.queries.ReduceProductQuantity(ctx, generated.ReduceProductQuantityParams{
+					Quantity: orderItem.Quantity,
+					ID:       orderItem.ProductID,
 				}); err != nil {
 					return pkg.Errorf(pkg.INTERNAL_ERROR, "error reducing product quantity: %v", err)
 				}
@@ -201,6 +199,11 @@ func (o *OrderRepository) ListUserOrders(ctx context.Context, userID uint32) ([]
 }
 
 func (o *OrderRepository) UpdateOrder(ctx context.Context, order *repository.UpdateOrder) error {
+	_, err := o.GetOrder(ctx, order.ID)
+	if err != nil {
+		return err
+	}
+
 	if err := order.Validate(); err != nil {
 		return pkg.Errorf(pkg.INVALID_ERROR, "%v", err)
 	}

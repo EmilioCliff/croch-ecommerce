@@ -145,7 +145,29 @@ func (c *CartRepository) ListProductInCarts(ctx context.Context, productID uint3
 }
 
 func (c *CartRepository) UpdateCart(ctx context.Context, quantity uint32, userID uint32, productID uint32) error {
-	err := c.queries.UpdateUserCart(ctx, generated.UpdateUserCartParams{
+	// check if the cart exist
+	_, err := c.queries.CheckUsersCartExists(ctx, generated.CheckUsersCartExistsParams{
+		UserID:    userID,
+		ProductID: productID,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			_, err := c.CreateCart(ctx, &repository.Cart{
+				UserID:    userID,
+				ProductID: productID,
+				Quantity:  quantity,
+			})
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+
+		return pkg.Errorf(pkg.INTERNAL_ERROR, "error retreving users cart")
+	}
+
+	err = c.queries.UpdateUserCart(ctx, generated.UpdateUserCartParams{
 		Quantity:  quantity,
 		UserID:    userID,
 		ProductID: productID,

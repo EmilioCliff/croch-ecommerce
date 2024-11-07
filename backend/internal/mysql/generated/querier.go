@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	CheckUsersCartExists(ctx context.Context, arg CheckUsersCartExistsParams) (Cart, error)
 	CreateBlog(ctx context.Context, arg CreateBlogParams) (sql.Result, error)
 	CreateCart(ctx context.Context, arg CreateCartParams) (sql.Result, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (sql.Result, error)
@@ -62,6 +63,7 @@ type Querier interface {
 	ListUserOrders(ctx context.Context, userID uint32) ([]Order, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	ListUsersReviews(ctx context.Context, userID uint32) ([]Review, error)
+	ReduceProductQuantity(ctx context.Context, arg ReduceProductQuantityParams) error
 	UpdateBlog(ctx context.Context, arg UpdateBlogParams) error
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) error
 	UpdateOrderStatus(ctx context.Context, arg UpdateOrderStatusParams) error

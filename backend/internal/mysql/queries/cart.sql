@@ -47,3 +47,8 @@ WHERE user_id = ?;
 UPDATE cart
   set quantity = ?
 WHERE user_id = ? AND product_id = ?;
+
+-- name: CheckUsersCartExists :one
+SELECT * FROM cart
+WHERE user_id = ? AND product_id = ?
+LIMIT 1;
